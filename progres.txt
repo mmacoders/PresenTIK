@@ -1,0 +1,36 @@
+Super Admin =  Perbaiki breadcumb
+
+Admin = Atur tampilan izin cuti
+
+User = DONE
+
+Tambahkan validasi izin
+
+| Tindakan                    | Siapa yang boleh   |
+| --------------------------- | ------------------ |
+| Ubah jam kerja              | Superadmin         |
+| Tambah pegawai              | Superadmin         |
+| Nonaktifkan pegawai         | Superadmin         |
+| Pantau absensi harian       | Admin & Superadmin |
+| Setujui izin                | Admin & Superadmin |
+| Ubah status izin (override) | Superadmin         |
+| Export laporan              | Admin & Superadmin |
+| Ubah lokasi kantor          | Superadmin         |
+| Kirim notifikasi umum       | Superadmin         |
+| Kirim pengumuman bidang     | Admin              |
+
+| Modul / Fitur                              | Superadmin                                           | Admin                                            | Penjelasan                                     |
+| -----------------------------------------  | ---------------------------------------------------- | ------------------------------------------------ | ---------------------------------------------- |
+| 🔑 **Manajemen User (Pegawai)**           | ✅ CRUD lengkap (tambah, edit, hapus, nonaktifkan)    | 🔍 Lihat saja                                    | Superadmin mengelola akun dan bidang pegawai   |
+| 👤 **Manajemen Admin**                    | ✅ CRUD admin (buat, nonaktifkan)                     | ❌ Tidak bisa                                     | Admin tidak bisa menambah admin baru           |
+| 🧱 **Manajemen Bidang / Divisi**          | ✅ Tambah, ubah, hapus                                | ❌ Tidak bisa                                     | Struktur bidang diatur global                  |
+| ⚙️ **Pengaturan Sistem (Setting Global)** | ✅ Kelola jam kerja, lokasi kantor, radius absensi    | ❌ Tidak bisa                                     | Hanya Superadmin menentukan konfigurasi sistem |
+| 🧭 **Monitoring Absensi Global**          | ✅ Lihat semua bidang, semua pegawai                  | 🔍 Lihat semua pegawai (tanpa akses konfigurasi) | Admin hanya bisa pantau data absensi           |
+| 🗂️ **Verifikasi Izin / Cuti**             | ✅ Bisa override (ubah status izin)                   | ✅ Verifikasi & catat izin pegawai                | Superadmin final, admin operasional            |
+| 📊 **Laporan Global**                     | ✅ Export seluruh pegawai / semua bidang              | ✅ Export laporan terbatas                        | Admin bisa ekspor data tapi tidak ubah sistem  |
+| 📜 **Log Aktivitas Sistem**               | ✅ Lihat seluruh log aktivitas admin & user           | 🔍 Lihat log aktivitas user                      | Admin hanya lihat log user, bukan superadmin   |
+| 🗺️ **Pengaturan Lokasi (Map)**            | ✅ Bisa ubah titik lokasi kantor                      | ❌ Hanya lihat                                    | Admin tidak boleh ubah titik koordinat         |
+| 🧠 **Hak Akses & Role**                   | ✅ Buat & atur peran baru                             | ❌ Tidak bisa                                     | Struktur role hanya dipegang Superadmin        |
+| 🧾 **Audit & Validasi Data**              | ✅ Bisa edit data absensi manual (jika perlu koreksi) | ❌ Tidak bisa edit                                | Admin hanya view/report                        |
+| 📢 **Notifikasi / Pengumuman**            | ✅ Buat dan broadcast ke semua user                   | ✅ Hanya bisa buat ke pegawai tertentu            | Admin hanya broadcast internal                 |
+| 🧩 **Dashboard Statistik**                | ✅ Statistik seluruh bidang                           | ✅ Statistik umum (tanpa pengaturan sistem)       | Tampilan mirip tapi cakupan berbeda            |
