@@ -108,38 +108,34 @@
         </div>
 
         <!-- Charts Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 gap-6">
             <!-- Attendance Chart -->
             <div class="bg-white rounded-xl shadow-md border-t-4 border-red-600 p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-bold text-gray-800 uppercase flex items-center">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-gray-800 uppercase flex items-center mb-4 md:mb-0">
                         <TrendingUpIcon class="w-5 h-5 text-red-600 mr-2" />
-                        Statistik Kehadiran
+                        Statistik Kehadiran (7 Hari Terakhir)
                     </h3>
+                    <div class="flex gap-4 text-sm">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                            <span class="text-gray-600">Hadir: <span class="font-bold text-gray-900">{{ totalWeeklyPresent }}</span></span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
+                            <span class="text-gray-600">Izin: <span class="font-bold text-gray-900">{{ totalWeeklyIzin }}</span></span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                            <span class="text-gray-600">Tidak Hadir: <span class="font-bold text-gray-900">{{ totalWeeklyAbsent }}</span></span>
+                        </div>
+                    </div>
                 </div>
                 <div class="h-80">
                     <apexchart 
                         type="area" 
                         :options="attendanceChartOptions" 
                         :series="attendanceChartSeries"
-                        height="100%"
-                    />
-                </div>
-            </div>
-            
-            <!-- Jabatan Distribution Chart -->
-            <div class="bg-white rounded-xl shadow-md border-t-4 border-red-600 p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-bold text-gray-800 uppercase flex items-center">
-                        <PieChartIcon class="w-5 h-5 text-red-600 mr-2" />
-                        Distribusi Pegawai
-                    </h3>
-                </div>
-                <div class="h-80">
-                    <apexchart 
-                        type="donut" 
-                        :options="jabatanChartOptions" 
-                        :series="jabatanChartSeries"
                         height="100%"
                     />
                 </div>
@@ -219,36 +215,83 @@ const currentDate = computed(() => {
   });
 });
 
+// Weekly totals
+const totalWeeklyPresent = computed(() => props.weeklyAttendance?.present?.reduce((a, b) => a + b, 0) || 0);
+const totalWeeklyAbsent = computed(() => props.weeklyAttendance?.absent?.reduce((a, b) => a + b, 0) || 0);
+const totalWeeklyIzin = computed(() => props.weeklyAttendance?.izin?.reduce((a, b) => a + b, 0) || 0);
+
 // Chart data
 const attendanceChartOptions = computed(() => ({
   chart: {
     type: 'area',
+    fontFamily: 'Inter, sans-serif',
     toolbar: { show: false },
-    zoom: { enabled: false }
+    zoom: { enabled: false },
+    background: 'transparent'
   },
   dataLabels: { enabled: false },
-  stroke: { curve: 'smooth', width: 2 },
+  stroke: { 
+    curve: 'smooth', 
+    width: 3,
+    colors: ['#10B981', '#F59E0B', '#EF4444']
+  },
+  fill: {
+    type: 'gradient',
+    gradient: {
+      shadeIntensity: 1,
+      opacityFrom: 0.7,
+      opacityTo: 0.2,
+      stops: [0, 90, 100]
+    }
+  },
   xaxis: {
     categories: props.weeklyAttendance?.dates || [],
     axisBorder: { show: false },
-    axisTicks: { show: false }
+    axisTicks: { show: false },
+    labels: {
+      style: {
+        colors: '#64748b',
+        fontSize: '12px'
+      }
+    }
   },
   yaxis: {
     min: 0,
     labels: {
+      style: {
+        colors: '#64748b',
+        fontSize: '12px'
+      },
       formatter: function (val) {
         return val.toFixed(0);
       }
     }
   },
+  grid: {
+    borderColor: '#f1f5f9',
+    strokeDashArray: 4,
+    yaxis: {
+      lines: { show: true }
+    }
+  },
   tooltip: {
-    x: { format: 'dd/MM/yy' }
+    theme: 'light',
+    x: { format: 'dd MMM yyyy' },
+    y: {
+      formatter: function (val) {
+        return val + " Pegawai"
+      }
+    }
   },
   legend: {
     position: 'top',
-    horizontalAlign: 'right'
+    horizontalAlign: 'right',
+    fontFamily: 'Inter, sans-serif',
+    markers: {
+      radius: 12
+    }
   },
-  colors: ['#10B981', '#EF4444']
+  colors: ['#10B981', '#F59E0B', '#EF4444']
 }));
 
 const attendanceChartSeries = computed(() => [
@@ -257,20 +300,12 @@ const attendanceChartSeries = computed(() => [
     data: props.weeklyAttendance?.present || []
   },
   {
-    name: 'Absen',
+    name: 'Izin',
+    data: props.weeklyAttendance?.izin || []
+  },
+  {
+    name: 'Tidak Hadir',
     data: props.weeklyAttendance?.absent || []
   }
 ]);
-
-const jabatanChartOptions = computed(() => ({
-  chart: { type: 'donut' },
-  labels: props.jabatanStats?.map(stat => stat.name) || [],
-  legend: { position: 'bottom' },
-  dataLabels: { enabled: false },
-  colors: ['#dc2626', '#2563eb', '#16a34a', '#d97706', '#9333ea', '#0891b2']
-}));
-
-const jabatanChartSeries = computed(() => {
-  return props.jabatanStats?.map(stat => stat.total_users) || [];
-});
 </script>

@@ -93,9 +93,15 @@ class AbsensiController extends Controller
             $jamMasuk = $systemSettings->jam_masuk ?? '08:00:00';
             $gracePeriodMinutes = $systemSettings->grace_period_minutes ?? 10;
             $cutoffTime = $systemSettings->cutoff_time ?? '10:00:00';
+            $presensiStartTime = $systemSettings->presensi_start_time ?? '06:00:00';
             
             // Get current time
             $currentTime = date('H:i:s');
+            
+            // Check if it's too early to check in
+            if ($currentTime < $presensiStartTime) {
+                return redirect()->back()->with('error', 'Belum waktunya presensi. Presensi dimulai pukul ' . substr($presensiStartTime, 0, 5));
+            }
             
             // Calculate grace period end time (jam_masuk + grace_period_minutes)
             $gracePeriodEnd = date('H:i:s', strtotime($jamMasuk) + ($gracePeriodMinutes * 60));

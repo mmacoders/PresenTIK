@@ -30,12 +30,6 @@
             />
             <input
               v-model="searchQuery"
-              type="text"
-              placeholder="Cari pegawai..."
-              class="pl-10 pr-4 py-2 border border-gray-400 rounded-lg w-full md:w-64"
-              @input="handleSearch"
-            />
-          </div>
         </div>
       </div>
 
@@ -115,6 +109,20 @@
                     >
                       <BanIcon v-if="user.status === 'aktif'" class="h-5 w-5" />
                       <CheckIcon v-else class="h-5 w-5" />
+                    </button>
+                    <button 
+                      @click="editUser(user)"
+                      class="text-yellow-600 hover:text-yellow-800 p-1 rounded transition-all duration-300"
+                      title="Edit"
+                    >
+                      <EditIcon class="h-5 w-5" />
+                    </button>
+                    <button 
+                      @click="openDeleteModal(user)"
+                      class="text-red-600 hover:text-red-800 p-1 rounded transition-all duration-300"
+                      title="Hapus"
+                    >
+                      <TrashIcon class="h-5 w-5" />
                     </button>
                   </div>
                 </td>
@@ -235,12 +243,165 @@
           </div>
         </div>
       </div>
+
+      <!-- Create/Edit Modal -->
+      <Modal :show="showCreateModal || showEditModal" @close="closeModal">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-medium text-gray-900">
+              {{ showEditModal ? 'Edit Pegawai' : 'Tambah Pegawai Baru' }}
+            </h3>
+            <button @click="closeModal" class="text-gray-400 hover:text-gray-500">
+              <XIcon class="h-6 w-6" />
+            </button>
+          </div>
+
+          <form @submit.prevent="handleSubmit" class="space-y-6">
+            <!-- Nama Lengkap -->
+            <div>
+              <InputLabel for="name" value="Nama Lengkap" />
+              <TextInput
+                id="name"
+                v-model="userForm.name"
+                type="text"
+                class="mt-1 block w-full"
+                placeholder="Masukkan nama lengkap"
+                required
+              />
+              <InputError :message="userForm.errors.name" class="mt-2" />
+            </div>
+
+            <!-- Email -->
+            <div>
+              <InputLabel for="email" value="Email" />
+              <TextInput
+                id="email"
+                v-model="userForm.email"
+                type="email"
+                class="mt-1 block w-full"
+                placeholder="email@example.com"
+                required
+              />
+              <InputError :message="userForm.errors.email" class="mt-2" />
+            </div>
+
+            <!-- No HP -->
+            <div>
+              <InputLabel for="no_hp" value="Nomor HP" />
+              <TextInput
+                id="no_hp"
+                v-model="userForm.no_hp"
+                type="text"
+                class="mt-1 block w-full"
+                placeholder="08xxxxxxxxxx"
+              />
+              <InputError :message="userForm.errors.no_hp" class="mt-2" />
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Pangkat -->
+              <div>
+                <InputLabel for="pangkat" value="Pangkat" />
+                <TextInput
+                  id="pangkat"
+                  v-model="userForm.pangkat"
+                  type="text"
+                  class="mt-1 block w-full"
+                  placeholder="Contoh: Bripda"
+                />
+                <InputError :message="userForm.errors.pangkat" class="mt-2" />
+              </div>
+
+              <!-- Jabatan -->
+              <div>
+                <InputLabel for="jabatan" value="Jabatan" />
+                <TextInput
+                  id="jabatan"
+                  v-model="userForm.jabatan"
+                  type="text"
+                  class="mt-1 block w-full"
+                  placeholder="Contoh: Staff IT"
+                />
+                <InputError :message="userForm.errors.jabatan" class="mt-2" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- NRP -->
+              <div>
+                <InputLabel for="nrp" value="NRP (Opsional)" />
+                <TextInput
+                  id="nrp"
+                  v-model="userForm.nrp"
+                  type="text"
+                  class="mt-1 block w-full"
+                  placeholder="Nomor Registrasi Pokok"
+                />
+                <InputError :message="userForm.errors.nrp" class="mt-2" />
+              </div>
+
+              <!-- NIP -->
+              <div>
+                <InputLabel for="nip" value="NIP (Opsional)" />
+                <TextInput
+                  id="nip"
+                  v-model="userForm.nip"
+                  type="text"
+                  class="mt-1 block w-full"
+                  placeholder="Nomor Induk Pegawai"
+                />
+                <InputError :message="userForm.errors.nip" class="mt-2" />
+              </div>
+            </div>
+
+            <!-- Status -->
+            <div>
+              <InputLabel for="status" value="Status" />
+              <select
+                id="status"
+                v-model="userForm.status"
+                class="mt-1 block w-full border-gray-300 focus:border-red-500 focus:ring-red-500 rounded-md shadow-sm"
+              >
+                <option value="aktif">Aktif</option>
+                <option value="nonaktif">Nonaktif</option>
+              </select>
+              <InputError :message="userForm.errors.status" class="mt-2" />
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6">
+              <SecondaryButton @click="closeModal" type="button">
+                Batal
+              </SecondaryButton>
+              <PrimaryButton
+                :class="{ 'opacity-25': userForm.processing }"
+                :disabled="userForm.processing"
+              >
+                {{ showEditModal ? 'Simpan Perubahan' : 'Tambah Pegawai' }}
+              </PrimaryButton>
+            </div>
+          </form>
+        </div>
+      </Modal>
+
+      <!-- Delete Confirmation Modal -->
+      <ConfirmModal
+        :open="showDeleteModal"
+        title="Hapus Pegawai"
+        message="Apakah Anda yakin ingin menghapus pegawai ini? Tindakan ini tidak dapat dibatalkan."
+        type="danger"
+        confirm-text="Hapus"
+        cancel-text="Batal"
+        @close="showDeleteModal = false"
+        @confirm="confirmDelete"
+      />
     </div>
   </AdminLayout>
 </template>
 
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import Modal from '@/Components/Modal.vue';
+import ConfirmModal from '@/Components/ConfirmModal.vue';
 import { ref, computed, watch } from 'vue';
 import { router, useForm } from '@inertiajs/vue3';
 import Pagination from '@/Components/Pagination.vue';
@@ -257,7 +418,10 @@ import {
   UserIcon,
   XIcon,
   BanIcon,
-  CheckIcon
+  CheckIcon,
+  PlusCircleIcon,
+  EditIcon,
+  TrashIcon
 } from 'lucide-vue-next';
 import debounce from 'lodash/debounce';
 
@@ -266,8 +430,25 @@ const props = defineProps({
 });
 
 // State
+const showCreateModal = ref(false);
+const showEditModal = ref(false);
+const showDeleteModal = ref(false);
 const showDetailModal = ref(false);
+const editingUser = ref(null);
 const detailUser = ref({});
+const userToDelete = ref(null);
+
+// Initialize form
+const userForm = useForm({
+  name: '',
+  email: '',
+  no_hp: '',
+  pangkat: '',
+  nip: '',
+  nrp: '',
+  jabatan: '',
+  status: 'aktif',
+});
 
 // Search and filter state
 const searchQuery = ref('');
@@ -386,6 +567,69 @@ const toggleUserStatus = (user) => {
 
 const handleImageError = (event) => {
   event.target.src = '/images/profile.png';
+};
+
+const createUser = () => {
+  userForm.post(route('admin.pegawai.store'), {
+    onSuccess: () => {
+      closeModal();
+      userForm.reset();
+    },
+  });
+};
+
+const updateUser = () => {
+  userForm.patch(route('admin.pegawai.update', editingUser.value.id), {
+    onSuccess: () => {
+      closeModal();
+    },
+  });
+};
+
+const handleSubmit = () => {
+  if (showEditModal.value) {
+    updateUser();
+  } else {
+    createUser();
+  }
+};
+
+const editUser = (user) => {
+  editingUser.value = user;
+  userForm.name = user.name;
+  userForm.email = user.email;
+  userForm.pangkat = user.pangkat;
+  userForm.nrp = user.nrp;
+  userForm.nip = user.nip;
+  userForm.no_hp = user.no_hp;
+  userForm.jabatan = user.jabatan;
+  userForm.status = user.status;
+  showEditModal.value = true;
+};
+
+const openDeleteModal = (user) => {
+  userToDelete.value = user;
+  showDeleteModal.value = true;
+};
+
+const confirmDelete = () => {
+  if (userToDelete.value) {
+    router.delete(route('admin.pegawai.destroy', userToDelete.value.id), {
+      onSuccess: () => {
+        showDeleteModal.value = false;
+        userToDelete.value = null;
+      }
+    });
+  }
+};
+
+const closeModal = () => {
+  showCreateModal.value = false;
+  showEditModal.value = false;
+  showDeleteModal.value = false;
+  editingUser.value = null;
+  userToDelete.value = null;
+  userForm.reset();
 };
 
 // Reset pagination when users or search query change

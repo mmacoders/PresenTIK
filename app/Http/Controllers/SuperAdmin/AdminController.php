@@ -24,21 +24,25 @@ class AdminController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'jabatan' => 'nullable|string|max:255',
+            'nrp' => 'required|string',
         ]);
         
-        // Create admin user with default password
-        User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make('password'), // Default password
-            'role' => 'admin',
-            'jabatan' => $request->jabatan,
+        $user = User::where('nrp', $request->nrp)->first();
+        
+        if (!$user) {
+            return redirect()->back()->withErrors(['nrp' => 'NRP tidak teregistrasi.']);
+        }
+        
+        // Cek jika user sudah admin atau superadmin
+        if ($user->role === 'admin' || $user->role === 'superadmin') {
+            return redirect()->back()->with('error', 'User dengan NRP tersebut sudah menjadi Admin atau Super Admin.');
+        }
+        
+        $user->update([
+            'role' => 'admin'
         ]);
         
-        return redirect()->back()->with('success', 'Admin berhasil ditambahkan.');
+        return redirect()->back()->with('success', 'Pegawai berhasil dijadikan Admin.');
     }
     
     public function update(Request $request, $id)

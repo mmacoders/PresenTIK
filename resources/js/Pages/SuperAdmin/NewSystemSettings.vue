@@ -92,6 +92,20 @@
                                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Jam Kerja</h3>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
+                                                <InputLabel for="presensi_start_time" value="Waktu Mulai Presensi" />
+                                                <input
+                                                    id="presensi_start_time"
+                                                    type="time"
+                                                    class="mt-1 block w-full border-gray-300 focus:border-[#C62828] focus:ring-[#C62828] rounded-md shadow-sm"
+                                                    v-model="settingsForm.presensi_start_time"
+                                                    :disabled="loading"
+                                                />
+                                                <div v-if="errors.presensi_start_time" class="mt-2 text-sm text-red-600">
+                                                    {{ errors.presensi_start_time[0] }}
+                                                </div>
+                                            </div>
+
+                                            <div>
                                                 <InputLabel for="jam_masuk" value="Jam Masuk" />
                                                 <input
                                                     id="jam_masuk"
@@ -194,6 +208,7 @@ const settingsForm = ref({
     location_longitude: '',
     location_radius: 100,
     jam_masuk: '',
+    presensi_start_time: '',
     grace_period_minutes: 10,
     cutoff_time: '',
 });
@@ -231,6 +246,13 @@ const loadSettings = async () => {
                 settingsForm.value.jam_masuk = timeStr.length >= 5 ? timeStr.substring(0, 5) : timeStr;
             } else {
                 settingsForm.value.jam_masuk = '';
+            }
+
+            if (settingsData.presensi_start_time) {
+                const timeStr = settingsData.presensi_start_time.toString();
+                settingsForm.value.presensi_start_time = timeStr.length >= 5 ? timeStr.substring(0, 5) : timeStr;
+            } else {
+                settingsForm.value.presensi_start_time = '';
             }
             
             if (settingsData.cutoff_time) {

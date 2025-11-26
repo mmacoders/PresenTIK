@@ -178,12 +178,98 @@
             {{ showEditModal ? 'Edit Admin' : 'Tambah Admin' }}
           </h3>
 
-          <AdminForm 
-            :admin="editingAdmin"
-            :is-edit="showEditModal"
-            @submit="handleSubmit"
-            @cancel="closeModal"
-          />
+          <form @submit.prevent="handleSubmit" class="space-y-6 font-['Inter']">
+            <!-- Form Tambah Admin (Hanya NRP) -->
+            <div v-if="!showEditModal">
+              <div>
+                <InputLabel for="nrp" value="NRP Pegawai" class="text-gray-700 font-medium" />
+                <TextInput
+                  id="nrp"
+                  type="text"
+                  class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#C62828] focus:ring-[#C62828]"
+                  v-model="adminForm.nrp"
+                  placeholder="Masukkan NRP Pegawai"
+                  required
+                  autofocus
+                />
+                <p class="text-sm text-gray-500 mt-1">Masukkan NRP pegawai yang ingin dijadikan Admin.</p>
+                <InputError class="mt-2" :message="adminForm.errors.nrp" />
+              </div>
+            </div>
+
+            <!-- Form Edit Admin (Biodata Lengkap) -->
+            <div v-else class="space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <InputLabel for="name" value="Nama Lengkap" class="text-gray-700 font-medium" />
+                  <TextInput
+                    id="name"
+                    type="text"
+                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#C62828] focus:ring-[#C62828]"
+                    v-model="adminForm.name"
+                    required
+                  />
+                  <InputError class="mt-2" :message="adminForm.errors.name" />
+                </div>
+
+                <div>
+                  <InputLabel for="email" value="Email" class="text-gray-700 font-medium" />
+                  <TextInput
+                    id="email"
+                    type="email"
+                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#C62828] focus:ring-[#C62828]"
+                    v-model="adminForm.email"
+                    required
+                  />
+                  <InputError class="mt-2" :message="adminForm.errors.email" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <InputLabel for="jabatan" value="Jabatan" class="text-gray-700 font-medium" />
+                  <TextInput
+                    id="jabatan"
+                    type="text"
+                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#C62828] focus:ring-[#C62828]"
+                    v-model="adminForm.jabatan"
+                    required
+                  />
+                  <InputError class="mt-2" :message="adminForm.errors.jabatan" />
+                </div>
+
+                <div>
+                  <InputLabel for="status" value="Status" class="text-gray-700 font-medium" />
+                  <select
+                    id="status"
+                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#C62828] focus:ring-[#C62828]"
+                    v-model="adminForm.status"
+                    required
+                  >
+                    <option value="active">Aktif</option>
+                    <option value="inactive">Nonaktif</option>
+                  </select>
+                  <InputError class="mt-2" :message="adminForm.errors.status" />
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-4 pt-4">
+              <SecondaryButton 
+                @click="closeModal" 
+                type="button"
+                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-all duration-300"
+              >
+                Batal
+              </SecondaryButton>
+              <PrimaryButton 
+                :disabled="adminForm.processing"
+                class="px-4 py-2 bg-[#C62828] text-white rounded-lg hover:bg-[#b71c1c] transition-all duration-300"
+              >
+                {{ showEditModal ? 'Update' : 'Simpan' }}
+              </PrimaryButton>
+            </div>
+          </form>
         </div>
       </Modal>
 
@@ -306,7 +392,7 @@ import { ref, computed, watch } from 'vue';
 import { router, useForm, usePage } from '@inertiajs/vue3';
 import Modal from '@/Components/Modal.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
-import AdminForm from '@/Components/AdminForm.vue';
+
 import SuperAdminSidebar from '@/Components/SuperAdminSidebar.vue';
 import SuperAdminHeader from '@/Components/SuperAdminHeader.vue';
 import Pagination from '@/Components/Pagination.vue';
@@ -352,10 +438,9 @@ const currentPage = ref(1);
 const adminsPerPage = ref(10);
 
 const adminForm = useForm({
+  nrp: '',
   name: '',
   email: '',
-  password: '',
-  password_confirmation: '',
   jabatan: '',
   status: 'active',
 });
@@ -448,33 +533,37 @@ const goToPage = (page) => {
   }
 };
 
-const createAdmin = (form) => {
-  form.post(route('superadmin.admin.store'), {
+const createAdmin = () => {
+  adminForm.post(route('superadmin.admin.store'), {
     onSuccess: () => {
       closeModal();
-      form.reset();
+      adminForm.reset();
     },
   });
 };
 
-const updateAdmin = (form) => {
-  form.patch(route('superadmin.admin.update', editingAdmin.value.id), {
+const updateAdmin = () => {
+  adminForm.patch(route('superadmin.admin.update', editingAdmin.value.id), {
     onSuccess: () => {
       closeModal();
     },
   });
 };
 
-const handleSubmit = (form) => {
+const handleSubmit = () => {
   if (showEditModal.value) {
-    updateAdmin(form);
+    updateAdmin();
   } else {
-    createAdmin(form);
+    createAdmin();
   }
 };
 
 const editAdmin = (admin) => {
   editingAdmin.value = admin;
+  adminForm.name = admin.name;
+  adminForm.email = admin.email;
+  adminForm.jabatan = admin.jabatan;
+  adminForm.status = admin.status;
   showEditModal.value = true;
 };
 

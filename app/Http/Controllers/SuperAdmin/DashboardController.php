@@ -85,6 +85,7 @@ class DashboardController extends Controller
     {
         $dates = [];
         $presentData = [];
+        $izinData = [];
         $absentData = [];
         
         // Get total users for absent calculation
@@ -103,13 +104,27 @@ class DashboardController extends Controller
                                  ->whereNotNull('waktu_masuk')
                                  ->count();
             
+            // Get izin count for this date
+            $izinCount = Absensi::where('tanggal', $formattedDate)
+                                ->where(function($query) {
+                                    $query->where('status', 'like', '%Izin%')
+                                          ->orWhere('status', 'like', '%izin%');
+                                })
+                                ->count();
+            
             $presentData[] = $presentCount;
-            $absentData[] = $totalUsers - $presentCount;
+            $izinData[] = $izinCount;
+            
+            // Absent is total - present - izin
+            // Ensure we don't go below zero
+            $absentCount = max(0, $totalUsers - $presentCount - $izinCount);
+            $absentData[] = $absentCount;
         }
         
         return [
             'dates' => $dates,
             'present' => $presentData,
+            'izin' => $izinData,
             'absent' => $absentData
         ];
     }

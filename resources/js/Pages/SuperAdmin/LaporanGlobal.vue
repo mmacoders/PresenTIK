@@ -152,6 +152,7 @@
                                 <thead class="bg-red-600 text-white text-left">
                                     <tr>
                                         <th class="px-6 py-3">Nama</th>
+                                        <th class="px-6 py-3">Role</th>
                                         <th class="px-6 py-3">Tanggal</th>
                                         <th class="px-6 py-3">Jam Masuk</th>
                                         <th class="px-6 py-3">Status</th>
@@ -161,6 +162,11 @@
                                 <tbody>
                                     <tr v-for="attendance in attendances.data" :key="attendance.id" class="border-b hover:bg-red-50">
                                         <td class="px-6 py-3 font-medium text-gray-900">{{ attendance.user.name }}</td>
+                                        <td class="px-6 py-3">
+                                            <span class="px-2 py-1 rounded-full text-xs font-medium" :class="getRoleClass(attendance.user.role)">
+                                                {{ getRoleText(attendance.user.role) }}
+                                            </span>
+                                        </td>
                                         <td class="px-6 py-3 text-gray-700">{{ formatDate(attendance.tanggal) }}</td>
                                         <td class="px-6 py-3 text-gray-700">{{ attendance.waktu_masuk || '-' }}</td>
                                         <td class="px-6 py-3">
@@ -176,7 +182,7 @@
                                         </td>
                                     </tr>
                                     <tr v-if="attendances.data.length === 0">
-                                        <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                                        <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
                                             Tidak ada data presensi
                                         </td>
                                     </tr>
@@ -289,8 +295,6 @@ const getStatusText = (attendance) => {
         return 'Hadir';
     } else if (attendance.status === 'Terlambat') {
         return 'Terlambat';
-    } else if (attendance.status.includes('Izin')) {
-        return 'Izin';
     } else if (attendance.status.includes('Tidak Hadir')) {
         return 'Absen';
     } else {
@@ -304,8 +308,6 @@ const getStatusClass = (attendance) => {
         return 'bg-green-100 text-green-800';
     } else if (attendance.status === 'Terlambat') {
         return 'bg-yellow-100 text-yellow-800';
-    } else if (attendance.status.includes('Izin')) {
-        return 'bg-blue-100 text-blue-800';
     } else if (attendance.status.includes('Tidak Hadir')) {
         return 'bg-red-100 text-red-800';
     } else {
@@ -365,6 +367,24 @@ const exportToPDF = () => {
 const fetchPage = (url) => {
     if (!url) return;
     router.get(url, {}, { preserveState: true });
+};
+
+const getRoleText = (role) => {
+    const roleMap = {
+        'user': 'User',
+        'admin': 'Admin',
+        'superadmin': 'Super Admin'
+    };
+    return roleMap[role] || role;
+};
+
+const getRoleClass = (role) => {
+    const classMap = {
+        'user': 'bg-blue-100 text-blue-800',
+        'admin': 'bg-purple-100 text-purple-800',
+        'superadmin': 'bg-red-100 text-red-800'
+    };
+    return classMap[role] || 'bg-gray-100 text-gray-800';
 };
 
 // Click outside handler for filter popover

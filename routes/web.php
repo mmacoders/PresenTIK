@@ -10,6 +10,8 @@ use App\Http\Controllers\SuperAdmin\PegawaiController as SuperAdminPegawaiContro
 use App\Http\Controllers\SuperAdmin\ProfilController as SuperAdminProfilController;
 use App\Http\Controllers\SuperAdmin\SystemSettingController as SuperAdminSystemSettingController;
 use App\Http\Controllers\SuperAdmin\AdminController as SuperAdminAdminController;
+use App\Http\Controllers\SuperAdmin\PresensiController as SuperAdminPresensiController;
+use App\Http\Controllers\Admin\PresensiController as AdminPresensiController;
 use App\Http\Controllers\User\AbsensiController;
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\User\ProfilController as UserProfilController;
@@ -32,7 +34,10 @@ Route::middleware(['auth', 'role:user'])->group(function () {
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/pegawai', [AdminPegawaiController::class, 'index'])->name('admin.pegawai');
+    Route::post('/admin/pegawai', [AdminPegawaiController::class, 'store'])->name('admin.pegawai.store');
     Route::get('/admin/pegawai/{user}', [AdminPegawaiController::class, 'show'])->name('admin.pegawai.show');
+    Route::patch('/admin/pegawai/{user}', [AdminPegawaiController::class, 'update'])->name('admin.pegawai.update');
+    Route::delete('/admin/pegawai/{user}', [AdminPegawaiController::class, 'destroy'])->name('admin.pegawai.destroy');
     Route::patch('/admin/pegawai/{user}/toggle-status', [AdminPegawaiController::class, 'toggleStatus'])->name('admin.pegawai.toggle-status');
     Route::get('/admin/laporan', [AdminLaporanController::class, 'index'])->name('admin.laporan');
     Route::post('/admin/laporan/export', [AdminLaporanController::class, 'export'])->name('admin.laporan.export');
@@ -50,6 +55,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     // Profil routes
     Route::get('/admin/profil', [AdminProfilController::class, 'index'])->name('admin.profil');
     Route::match(['patch', 'post'], '/admin/profil', [AdminProfilController::class, 'update'])->name('admin.profil.update');
+    
+    // Presensi routes
+    Route::get('/admin/presensi', [AdminPresensiController::class, 'index'])->name('admin.presensi');
+    Route::post('/admin/presensi/checkin', [AdminPresensiController::class, 'checkin'])->name('admin.presensi.checkin');
 });
 
 // SuperAdmin routes
@@ -87,6 +96,10 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
     // Profil routes
     Route::get('/superadmin/profil', [SuperAdminProfilController::class, 'index'])->name('superadmin.profil');
     Route::match(['patch', 'post'], '/superadmin/profil', [SuperAdminProfilController::class, 'update'])->name('superadmin.profil.update');
+    
+    // Presensi routes
+    Route::get('/superadmin/presensi', [SuperAdminPresensiController::class, 'index'])->name('superadmin.presensi');
+    Route::post('/superadmin/presensi/checkin', [SuperAdminPresensiController::class, 'checkin'])->name('superadmin.presensi.checkin');
 });
 
 // API routes for system settings - accessible by users for testing

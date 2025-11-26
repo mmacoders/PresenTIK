@@ -34,6 +34,7 @@ class SystemSettingController extends Controller
             'disable_location_validation' => $settings->disable_location_validation,
             'work_start_time' => $settings->jam_masuk,
             'work_end_time' => $settings->jam_pulang,
+            'presensi_start_time' => $settings->presensi_start_time ?? '06:00:00',
         ];
         
         return Inertia::render('SuperAdmin/NewSystemSettings', [
@@ -69,6 +70,7 @@ class SystemSettingController extends Controller
             'disable_location_validation' => 'boolean',
             'work_start_time' => 'required|string|regex:/^\d{2}:\d{2}(:\d{2})?$/',
             'work_end_time' => 'required|string|regex:/^\d{2}:\d{2}(:\d{2})?$/',
+            'presensi_start_time' => 'required|string|regex:/^\d{2}:\d{2}(:\d{2})?$/',
         ]);
         
         // Get or create the settings record
@@ -87,6 +89,7 @@ class SystemSettingController extends Controller
         // Handle time formatting - ensure we store in HH:mm:ss format
         $settings->jam_masuk = strlen($request->work_start_time) === 5 ? $request->work_start_time . ':00' : $request->work_start_time;
         $settings->jam_pulang = strlen($request->work_end_time) === 5 ? $request->work_end_time . ':00' : $request->work_end_time;
+        $settings->presensi_start_time = strlen($request->presensi_start_time) === 5 ? $request->presensi_start_time . ':00' : $request->presensi_start_time;
         
         $settings->save();
         

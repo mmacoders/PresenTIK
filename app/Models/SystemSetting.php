@@ -13,7 +13,8 @@ class SystemSetting extends Model
         'jam_masuk',
         'grace_period_minutes',
         'cutoff_time',
-        'disable_location_validation', // Add this field
+        'disable_location_validation',
+        'presensi_start_time', // Add this field
     ];
 
     protected $casts = [

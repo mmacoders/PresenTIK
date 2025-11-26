@@ -12,7 +12,7 @@
         <div v-if="!isCollapsed" key="full-logo" class="flex flex-col items-center gap-2 w-full">
           <img src="/images/logo-tik-polri.png" alt="Logo TIK POLRI" class="w-20 h-auto rounded-sm" />
           <div class="flex flex-col items-center py-3">
-            <span class="font-bold text-sm text-white leading-tight">SIMABSEN</span>
+            <span class="font-bold text-sm text-white leading-tight">PresenTIK</span>
           </div>
         </div>
         <div v-else key="collapsed-logo" class="flex justify-center w-full">

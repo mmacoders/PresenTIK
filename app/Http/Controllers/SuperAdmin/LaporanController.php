@@ -14,7 +14,7 @@ class LaporanController extends Controller
     public function index(Request $request)
     {
         // Build query for attendances
-        $attendancesQuery = Absensi::with(['user'])->orderBy('tanggal', 'desc');
+        $attendancesQuery = Absensi::with(['user'])->orderBy('created_at', 'desc');
         
         if ($request->search) {
             $attendancesQuery->whereHas('user', function($q) use ($request) {
@@ -42,7 +42,7 @@ class LaporanController extends Controller
     public function exportExcel(Request $request)
     {
         // Build query for attendances
-        $attendancesQuery = Absensi::with(['user'])->orderBy('tanggal', 'desc');
+        $attendancesQuery = Absensi::with(['user'])->orderBy('created_at', 'desc');
         
         if ($request->search) {
             $attendancesQuery->whereHas('user', function($q) use ($request) {
@@ -62,10 +62,11 @@ class LaporanController extends Controller
         $attendances = $attendancesQuery->get();
         
         // Create CSV content
-        $csvData = "Nama,Tanggal,Masuk,Keluar,Status,Keterangan\n";
+        $csvData = "Nama,Role,Tanggal,Masuk,Keluar,Status,Keterangan\n";
         
         foreach ($attendances as $attendance) {
             $csvData .= '"' . $attendance->user->name . '",';
+            $csvData .= '"' . ucfirst($attendance->user->role) . '",';
             $csvData .= '"' . $attendance->tanggal . '",';
             $csvData .= '"' . ($attendance->waktu_masuk ?? '-') . '",';
             $csvData .= '"' . ($attendance->waktu_keluar ?? '-') . '",';
@@ -82,7 +83,7 @@ class LaporanController extends Controller
     public function exportPDF(Request $request)
     {
         // Build query for attendances
-        $attendancesQuery = Absensi::with(['user'])->orderBy('tanggal', 'desc');
+        $attendancesQuery = Absensi::with(['user'])->orderBy('created_at', 'desc');
         
         if ($request->search) {
             $attendancesQuery->whereHas('user', function($q) use ($request) {
@@ -105,10 +106,11 @@ class LaporanController extends Controller
         // In a real application, you would use a PDF library like DomPDF or TCPDF
         $pdfContent = "Laporan Absensi\n\n";
         $pdfContent .= "Tanggal: " . date('d/m/Y H:i:s') . "\n\n";
-        $pdfContent .= "Nama\tTanggal\tMasuk\tKeluar\tStatus\tKeterangan\n";
+        $pdfContent .= "Nama\tRole\tTanggal\tMasuk\tKeluar\tStatus\tKeterangan\n";
         
         foreach ($attendances as $attendance) {
             $pdfContent .= $attendance->user->name . "\t";
+            $pdfContent .= ucfirst($attendance->user->role) . "\t";
             $pdfContent .= $attendance->tanggal . "\t";
             $pdfContent .= ($attendance->waktu_masuk ?? '-') . "\t";
             $pdfContent .= ($attendance->waktu_keluar ?? '-') . "\t";

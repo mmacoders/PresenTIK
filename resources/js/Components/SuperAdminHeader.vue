@@ -26,9 +26,9 @@
                 <ChevronRightIcon class="w-4 h-4 text-gray-400" />
               </li>
               <li>
-                <span class="text-gray-800 font-medium flex items-center">
+                <a :href="route('superadmin.dashboard')" class="text-gray-500 hover:text-[#dc2626] transition-colors duration-200 flex items-center">
                   {{ title }}
-                </span>
+                </a>
               </li>
             </ol>
           </nav>

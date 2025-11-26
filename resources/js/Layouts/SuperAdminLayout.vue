@@ -2,6 +2,7 @@
   <div class="flex min-h-screen">
     <!-- Sidebar -->
     <SuperAdminSidebar 
+      ref="sidebarRef"
       :sidebar-open="sidebarOpen"
       @update:sidebarOpen="sidebarOpen = $event"
       @toggle-collapse="isSidebarCollapsed = $event"
@@ -17,7 +18,7 @@
         :title="pageTitle || 'Dashboard'"
         :mobile-title="mobilePageTitle || 'Dashboard'"
         :is-collapsed="isSidebarCollapsed"
-        @toggle-sidebar="sidebarOpen = !sidebarOpen"
+        @toggle-sidebar="toggleSidebar"
       >
         <template #header>
           <slot name="header" />
@@ -52,4 +53,16 @@ const props = defineProps({
 // State
 const sidebarOpen = ref(true);
 const isSidebarCollapsed = ref(false);
+const sidebarRef = ref(null);
+
+// Methods
+const toggleSidebar = () => {
+  if (window.innerWidth >= 768) {
+    if (sidebarRef.value) {
+      sidebarRef.value.toggleCollapse();
+    }
+  } else {
+    sidebarOpen.value = !sidebarOpen.value;
+  }
+};
 </script>

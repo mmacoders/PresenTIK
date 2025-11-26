@@ -44,15 +44,6 @@
                   @input="handleSearch"
                 />
               </div>
-              
-              <!-- Add Button -->
-              <button
-                @click="showCreateModal = true"
-                class="flex items-center gap-2 px-4 py-2 bg-[#C62828] text-white rounded-lg hover:bg-[#b71c1c] transition-colors duration-200 whitespace-nowrap"
-              >
-                <PlusCircleIcon class="h-5 w-5" />
-                Tambah Pegawai
-              </button>
             </div>
           </div>
 
@@ -125,20 +116,7 @@
                         >
                           <EyeIcon class="h-5 w-5" />
                         </button>
-                        <button 
-                          @click="editUser(user)"
-                          class="text-[#C62828] hover:text-[#b71c1c] p-1 rounded transition-all duration-300"
-                          title="Edit"
-                        >
-                          <EditIcon class="h-5 w-5" />
-                        </button>
-                        <button 
-                          @click="openDeleteModal(user)"
-                          class="text-gray-600 hover:text-gray-800 p-1 rounded transition-all duration-300"
-                          title="Hapus"
-                        >
-                          <TrashIcon class="h-5 w-5" />
-                        </button>
+
                       </div>
                     </td>
                   </tr>
@@ -167,139 +145,7 @@
         </div>
       </main>
 
-      <!-- Create/Edit Modal -->
-      <Modal :show="showCreateModal || showEditModal" @close="closeModal">
-        <div class="p-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">
-            {{ showEditModal ? 'Edit Pegawai' : 'Tambah Pegawai' }}
-          </h3>
 
-          <form @submit.prevent="handleSubmit" class="space-y-6 font-['Inter']">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <InputLabel for="name" value="Nama Lengkap" class="text-gray-700 font-medium" />
-                <TextInput
-                  id="name"
-                  type="text"
-                  class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#C62828] focus:ring-[#C62828]"
-                  v-model="userForm.name"
-                  required
-                  autofocus
-                />
-                <InputError class="mt-2" :message="userForm.errors.name" />
-              </div>
-
-              <div>
-                <InputLabel for="email" value="Email" class="text-gray-700 font-medium" />
-                <TextInput
-                  id="email"
-                  type="email"
-                  class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#C62828] focus:ring-[#C62828]"
-                  v-model="userForm.email"
-                  required
-                />
-                <InputError class="mt-2" :message="userForm.errors.email" />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <InputLabel for="pangkat" value="Pangkat" class="text-gray-700 font-medium" />
-                <TextInput
-                  id="pangkat"
-                  type="text"
-                  class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#C62828] focus:ring-[#C62828]"
-                  v-model="userForm.pangkat"
-                  required
-                />
-                <InputError class="mt-2" :message="userForm.errors.pangkat" />
-              </div>
-
-              <div>
-                <InputLabel for="nrp" value="NRP" class="text-gray-700 font-medium" />
-                <TextInput
-                  id="nrp"
-                  type="text"
-                  class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#C62828] focus:ring-[#C62828]"
-                  v-model="userForm.nrp"
-                  required
-                />
-                <InputError class="mt-2" :message="userForm.errors.nrp" />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <InputLabel for="nip" value="NIP" class="text-gray-700 font-medium" />
-                <TextInput
-                  id="nip"
-                  type="text"
-                  class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#C62828] focus:ring-[#C62828]"
-                  v-model="userForm.nip"
-                />
-                <InputError class="mt-2" :message="userForm.errors.nip" />
-              </div>
-
-              <div>
-                <InputLabel for="no_hp" value="No. HP" class="text-gray-700 font-medium" />
-                <TextInput
-                  id="no_hp"
-                  type="text"
-                  class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#C62828] focus:ring-[#C62828]"
-                  v-model="userForm.no_hp"
-                />
-                <InputError class="mt-2" :message="userForm.errors.no_hp" />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <InputLabel for="jabatan" value="Jabatan" class="text-gray-700 font-medium" />
-                <TextInput
-                  id="jabatan"
-                  type="text"
-                  class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#C62828] focus:ring-[#C62828]"
-                  v-model="userForm.jabatan"
-                  required
-                />
-                <InputError class="mt-2" :message="userForm.errors.jabatan" />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <InputLabel for="status" value="Status" class="text-gray-700 font-medium" />
-                <select
-                  id="status"
-                  class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#C62828] focus:ring-[#C62828]"
-                  v-model="userForm.status"
-                  required
-                >
-                  <option value="aktif">Aktif</option>
-                  <option value="nonaktif">Nonaktif</option>
-                </select>
-                <InputError class="mt-2" :message="userForm.errors.status" />
-              </div>
-            </div>
-
-            <div class="flex items-center justify-end gap-4 pt-4">
-              <SecondaryButton 
-                @click="closeModal" 
-                type="button"
-                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-all duration-300"
-              >
-                Batal
-              </SecondaryButton>
-              <PrimaryButton 
-                :disabled="userForm.processing"
-                class="px-4 py-2 bg-[#C62828] text-white rounded-lg hover:bg-[#b71c1c] transition-all duration-300"
-              >
-                {{ showEditModal ? 'Update' : 'Simpan' }}
-              </PrimaryButton>
-            </div>
-          </form>
-        </div>
-      </Modal>
 
       <!-- Detail View Modal (Following Pegawai style) -->
       <div v-if="showDetailModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -382,13 +228,7 @@
                 </div>
                 
                 <div class="mt-6 flex space-x-3">
-                  <button
-                    @click="editUser(detailUser)"
-                    class="flex-1 px-4 py-2 bg-[#C62828] text-white rounded-lg hover:bg-[#b71c1c] transition-colors duration-200 flex items-center justify-center"
-                  >
-                    <EditIcon class="h-4 w-4 mr-2" />
-                    Edit
-                  </button>
+
                   <button
                     @click="closeDetailModal"
                     class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
