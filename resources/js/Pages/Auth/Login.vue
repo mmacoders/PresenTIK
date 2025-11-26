@@ -38,7 +38,7 @@ const submit = () => {
             <div class="flex flex-col items-center">
                 <img src="/images/logo-tik-polri.png" alt="Logo Polda TIK" class="h-28 w-auto drop-shadow-lg transform hover:scale-105 transition-transform duration-300" />
                 <h2 class="mt-6 text-center text-3xl font-extrabold text-slate-900 tracking-tight">
-                    ABSENSI POLDA TIK
+                    PRESENSI POLDA TIK
                 </h2>
                 <p class="mt-2 text-center text-sm text-slate-600 font-medium">
                     Silahkan login untuk melanjutkan

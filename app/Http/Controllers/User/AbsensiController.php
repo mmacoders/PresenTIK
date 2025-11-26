@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class AbsensiController extends Controller
 {
@@ -20,12 +21,15 @@ class AbsensiController extends Controller
         /** @var User $user */
         $user = Auth::user();
         
+        // Get current date using Carbon
+        $today = Carbon::now()->format('Y-m-d');
+        
         // Get today's attendance record
-        $todayAttendance = $user->absensis()->where('tanggal', date('Y-m-d'))->first();
+        $todayAttendance = $user->absensis()->where('tanggal', $today)->first();
         
         // Get today's leave request
-        $todayIzin = $user->izins()->where('tanggal_mulai', '<=', date('Y-m-d'))
-            ->where('tanggal_selesai', '>=', date('Y-m-d'))
+        $todayIzin = $user->izins()->where('tanggal_mulai', '<=', $today)
+            ->where('tanggal_selesai', '>=', $today)
             ->first();
         
         // Get system settings
@@ -35,12 +39,25 @@ class AbsensiController extends Controller
         $testingModeDisabled = ($systemSettings && $systemSettings->disable_location_validation) || 
                               session('testing_mode_disabled', false);
         
+        // Get attendance history (last 7 days)
+        $attendanceHistory = $user->absensis()
+            ->where('tanggal', '>=', Carbon::now()->subDays(7)->format('Y-m-d'))
+            ->orderBy('tanggal', 'desc')
+            ->get();
+        
+        // Get pending leave requests
+        $pendingIzins = $user->izins()
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
         return inertia('User/Absensi', [
-            'user' => $user,
             'todayAttendance' => $todayAttendance,
             'todayIzin' => $todayIzin,
             'systemSettings' => $systemSettings,
             'testingModeDisabled' => $testingModeDisabled,
+            'attendanceHistory' => $attendanceHistory,
+            'pendingIzins' => $pendingIzins,
         ]);
     }
     
@@ -95,8 +112,10 @@ class AbsensiController extends Controller
             $cutoffTime = $systemSettings->cutoff_time ?? '10:00:00';
             $presensiStartTime = $systemSettings->presensi_start_time ?? '06:00:00';
             
-            // Get current time
-            $currentTime = date('H:i:s');
+            // Get current time using Carbon with proper timezone
+            $now = Carbon::now();
+            $currentTime = $now->format('H:i:s');
+            $currentDate = $now->format('Y-m-d');
             
             // Check if it's too early to check in
             if ($currentTime < $presensiStartTime) {
@@ -104,7 +123,7 @@ class AbsensiController extends Controller
             }
             
             // Calculate grace period end time (jam_masuk + grace_period_minutes)
-            $gracePeriodEnd = date('H:i:s', strtotime($jamMasuk) + ($gracePeriodMinutes * 60));
+            $gracePeriodEnd = Carbon::parse($jamMasuk)->addMinutes($gracePeriodMinutes)->format('H:i:s');
             
             // Determine status based on time
             $isLate = $currentTime > $gracePeriodEnd; // Late if after grace period
@@ -115,8 +134,8 @@ class AbsensiController extends Controller
             // Prepare check-in data
             $checkinData = [
                 'user_id' => $user->id,
-                'tanggal' => date('Y-m-d'),
-                'waktu_masuk' => date('H:i:s'),
+                'tanggal' => $currentDate,
+                'waktu_masuk' => $currentTime,
                 'lat_masuk' => $lat,
                 'lng_masuk' => $lng,
                 'status_lokasi_masuk' => $locationValidationDisabled ? 'valid' : $this->validateLocation($lat, $lng),
@@ -214,8 +233,10 @@ class AbsensiController extends Controller
     // Check if user can check in
     private function canCheckIn(User $user)
     {
+        $today = Carbon::now()->format('Y-m-d');
+        
         // Check if user already has an attendance record for today with check-in time
-        $todayAttendance = $user->absensis()->where('tanggal', date('Y-m-d'))->first();
+        $todayAttendance = $user->absensis()->where('tanggal', $today)->first();
         
         // If user already checked in, they can't check in again
         if ($todayAttendance && $todayAttendance->waktu_masuk) {
@@ -223,8 +244,8 @@ class AbsensiController extends Controller
         }
         
         // Check if user has full leave permission for today
-        $todayIzin = $user->izins()->where('tanggal_mulai', '<=', date('Y-m-d'))
-            ->where('tanggal_selesai', '>=', date('Y-m-d'))
+        $todayIzin = $user->izins()->where('tanggal_mulai', '<=', $today)
+            ->where('tanggal_selesai', '>=', $today)
             ->first();
             
         if ($todayIzin && $todayIzin->jenis_izin === 'penuh') {

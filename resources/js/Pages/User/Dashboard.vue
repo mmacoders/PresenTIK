@@ -164,26 +164,62 @@
                       <tr>
                          <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Tanggal</th>
                          <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Masuk</th>
-                         <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Keluar</th>
                          <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                         <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Lampiran</th>
                          <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Ket</th>
                       </tr>
                    </thead>
                    <tbody class="divide-y divide-gray-100">
-                      <tr v-for="attendance in attendanceHistory" :key="attendance.id" class="hover:bg-gray-50">
-                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ formatDate(attendance.tanggal) }}</td>
-                         <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-600">{{ attendance.waktu_masuk || '-' }}</td>
-                         <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-600">{{ attendance.waktu_keluar || '-' }}</td>
-                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span :class="getAttendanceStatusClass(attendance)" class="px-2 py-1 inline-flex text-xs leading-5 font-bold rounded uppercase">
-                               {{ getAttendanceStatusText(attendance) }}
-                            </span>
+                      <tr v-for="(item, index) in combinedHistory" :key="`history-${index}`" class="hover:bg-gray-50">
+                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ formatDate(item.date) }}</td>
+                         <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-600">
+                           <template v-if="item.type === 'attendance'">
+                             {{ item.data.waktu_masuk || '-' }}
+                           </template>
+                           <template v-else>
+                             <span class="text-gray-400 italic text-xs">Izin</span>
+                           </template>
                          </td>
-                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs">{{ attendance.keterangan || '-' }}</td>
+                         <td class="px-6 py-4 whitespace-nowrap">
+                           <span 
+                             :class="item.type === 'attendance' ? getAttendanceStatusClass(item.data) : 'bg-blue-100 text-blue-700'" 
+                             class="px-2 py-1 inline-flex text-xs leading-5 font-bold rounded uppercase"
+                           >
+                              <template v-if="item.type === 'attendance'">
+                                {{ getAttendanceStatusText(item.data) }}
+                              </template>
+                              <template v-else>
+                                Izin {{ item.data.jenis_izin === 'penuh' ? '(Full)' : '(Parsial)' }}
+                              </template>
+                           </span>
+                         </td>
+                         <td class="px-6 py-4 whitespace-nowrap text-sm">
+                           <template v-if="item.type === 'izin' && item.data.file_path">
+                             <a 
+                               :href="`/storage/${item.data.file_path}`" 
+                               target="_blank"
+                               class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
+                             >
+                               <FileTextIcon class="w-4 h-4 mr-1" />
+                               Lihat File
+                             </a>
+                           </template>
+                           <template v-else>
+                             <span class="text-gray-400 text-xs">-</span>
+                           </template>
+                         </td>
+                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs">
+                           <template v-if="item.type === 'attendance'">
+                             {{ item.data.keterangan || '-' }}
+                           </template>
+                           <template v-else>
+                             {{ item.data.keterangan || '-' }}
+                           </template>
+                         </td>
                       </tr>
-                      <tr v-if="attendanceHistory.length === 0">
+                      <tr v-if="combinedHistory.length === 0">
                          <td colspan="5" class="px-6 py-8 text-center text-gray-500 text-sm">
-                            Tidak ada data presensi
+                            Tidak ada data presensi atau izin
                          </td>
                       </tr>
                    </tbody>
@@ -214,7 +250,8 @@ import {
   CalendarIcon,
   CalendarXIcon,
   ClockIcon,
-  InfoIcon
+  InfoIcon,
+  FileTextIcon
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -222,6 +259,7 @@ const props = defineProps({
     todayAttendance: Object,
     todayIzin: Object,
     attendanceHistory: Array,
+    izinHistory: Array, // Add izin history
     systemSettings: Object,
 });
 
@@ -326,22 +364,67 @@ const hasCheckedIn = computed(() => {
   return props.todayAttendance && props.todayAttendance.waktu_masuk;
 });
 
-const hasCheckedOut = computed(() => {
-  return props.todayAttendance && props.todayAttendance.waktu_keluar;
-});
-
 const todayStatus = computed(() => {
   if (props.todayIzin && props.todayIzin.jenis_izin === 'penuh') {
     return 'Izin (Valid)';
   } else if (props.todayAttendance && props.todayAttendance.status === 'Izin Parsial (Check-in)') {
     return 'Sudah Check-in (Izin Parsial)';
-  } else if (hasCheckedOut.value) {
-    return 'Selesai';
   } else if (hasCheckedIn.value) {
     return 'Sudah Check-in';
   } else {
     return 'Belum Check-in';
   }
+});
+
+// Combine attendance and izin history
+const combinedHistory = computed(() => {
+  const combined = [];
+  
+  // Add attendance records
+  if (props.attendanceHistory) {
+    props.attendanceHistory.forEach(attendance => {
+      combined.push({
+        type: 'attendance',
+        date: attendance.tanggal,
+        data: attendance
+      });
+    });
+  }
+  
+  // Add izin records - expand multi-day izin into individual days
+  if (props.izinHistory) {
+    props.izinHistory.forEach(izin => {
+      const startDate = new Date(izin.tanggal_mulai);
+      const endDate = new Date(izin.tanggal_selesai);
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      // Loop through each day of the izin period
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        // Only add if within the last 7 days
+        if (d >= sevenDaysAgo) {
+          const dateStr = d.toISOString().split('T')[0];
+          
+          // Check if there's already an attendance record for this date
+          const hasAttendance = combined.some(item => 
+            item.type === 'attendance' && item.date === dateStr
+          );
+          
+          // Only add izin if there's no attendance record (to avoid duplicates)
+          if (!hasAttendance) {
+            combined.push({
+              type: 'izin',
+              date: dateStr,
+              data: izin
+            });
+          }
+        }
+      }
+    });
+  }
+  
+  // Sort by date descending (newest first)
+  return combined.sort((a, b) => new Date(b.date) - new Date(a.date));
 });
 
 // Methods
@@ -363,7 +446,6 @@ const getLocationValidationText = () => {
 
 const getAttendanceStatusText = (attendance) => {
   // First check if this attendance record is associated with any leave permission
-  // This handles cases where the status field might not be properly set
   if (attendance.status === 'Izin (Valid)' || attendance.status === 'izin' || attendance.status === 'Izin') {
     return 'Izin';
   } else if (attendance.status === 'Izin Parsial (Check-in)' || attendance.status === 'Izin Parsial (Selesai)') {
@@ -373,15 +455,10 @@ const getAttendanceStatusText = (attendance) => {
   } else if (attendance.status === 'alpha') {
     return 'Tidak Hadir';
   } else if (attendance.status === 'hadir' || attendance.status === 'Hadir') {
-    // For 'hadir' status, check if the user has actually checked in
     return attendance.waktu_masuk ? 'Tepat Waktu' : 'Tidak Hadir';
-  } else if (attendance.waktu_masuk && attendance.waktu_keluar) {
-    return 'Tepat Waktu';
   } else if (attendance.waktu_masuk) {
-    return 'Sudah Check-in';
+    return 'Hadir';
   } else {
-    // Check if there's an associated leave permission that might not be reflected in the status
-    // This is a fallback for cases where the status field wasn't properly updated
     return 'Tidak Hadir';
   }
 };
@@ -421,8 +498,6 @@ const getStatusClass = (status) => {
       return 'bg-gray-100 text-gray-700';
     case 'Sudah Check-in':
       return 'bg-red-100 text-red-700';
-    case 'Selesai':
-      return 'bg-gray-900 text-white';
     case 'Izin (Valid)':
     case 'Sudah Check-in (Izin Parsial)':
       return 'bg-pink-100 text-pink-700';
@@ -439,12 +514,9 @@ const getAttendanceStatusClass = (attendance) => {
   } else if (attendance.status === 'terlambat' || attendance.status === 'Terlambat') {
     return 'bg-red-100 text-red-700';
   } else if (attendance.status === 'hadir' || attendance.status === 'Hadir') {
-    // For 'hadir' status, check if the user has actually checked in
     return attendance.waktu_masuk ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700';
-  } else if (attendance.waktu_masuk && attendance.waktu_keluar) {
-    return 'bg-green-100 text-green-700'; // Completed attendance
   } else if (attendance.waktu_masuk) {
-    return 'bg-blue-100 text-blue-700'; // Check-in only
+    return 'bg-green-100 text-green-700'; // Has checked in
   } else {
     return 'bg-gray-100 text-gray-700'; // No attendance or absent
   }

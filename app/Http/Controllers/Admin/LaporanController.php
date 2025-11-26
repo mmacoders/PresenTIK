@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Absensi;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 class LaporanController extends Controller
 {
@@ -14,22 +15,25 @@ class LaporanController extends Controller
     {
         $admin = auth()->user();
         
-        // Get date range (default to current month)
-        $startDate = request('start_date', date('Y-m-01'));
-        $endDate = request('end_date', date('Y-m-t'));
+        // Get date range (default to current month) using Carbon with proper timezone
+        $now = Carbon::now();
+        $startDate = request('start_date', $now->copy()->startOfMonth()->format('Y-m-d'));
+        $endDate = request('end_date', $now->copy()->endOfMonth()->format('Y-m-d'));
         
-        // Get all users (since we're not using bidang anymore)
-        $users = User::where('role', 'user')
-                    ->get();
+        // Get all users including admin and superadmin for monitoring
+        $users = User::all();
         
-        // Get attendance records for the date range
-        $attendances = Absensi::whereHas('user', function ($query) {
-                        $query->where('role', 'user');
-                    })
-                    ->whereBetween('tanggal', [$startDate, $endDate])
+        // Get attendance records for the date range (all roles)
+        $attendances = Absensi::whereBetween('tanggal', [$startDate, $endDate])
                     ->with('user')
                     ->orderBy('tanggal', 'desc')
+                    ->orderBy('created_at', 'desc') // Show latest entries first
                     ->get();
+        
+        // Set no-cache headers
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
         
         return Inertia::render('Admin/Laporan', [
             'users' => $users,
@@ -47,21 +51,21 @@ class LaporanController extends Controller
         $startDate = $request->start_date;
         $endDate = $request->end_date;
         
-        // Get attendance records for export
-        $attendances = Absensi::whereHas('user', function ($query) {
-                        $query->where('role', 'user');
-                    })
-                    ->whereBetween('tanggal', [$startDate, $endDate])
+        // Get attendance records for export (all roles)
+        $attendances = Absensi::whereBetween('tanggal', [$startDate, $endDate])
                     ->with('user')
                     ->orderBy('tanggal', 'desc')
-                    ->orderBy('user.name')
+                    ->orderBy('created_at', 'desc')
                     ->get();
         
-        // Create CSV content
-        $csvData = "Nama,Tanggal,Masuk,Keluar,Status,Keterangan\n";
+        // Create CSV content with Role column
+        $csvData = "Nama,Role,Tanggal,Masuk,Keluar,Status,Keterangan\n";
         
         foreach ($attendances as $attendance) {
+            if (!$attendance->user) continue; // Skip if user not found
+            
             $csvData .= '"' . $attendance->user->name . '",';
+            $csvData .= '"' . ucfirst($attendance->user->role) . '",';
             $csvData .= '"' . $attendance->tanggal . '",';
             $csvData .= '"' . ($attendance->waktu_masuk ?? '-') . '",';
             $csvData .= '"' . ($attendance->waktu_keluar ?? '-') . '",';

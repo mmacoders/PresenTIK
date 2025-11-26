@@ -25,10 +25,11 @@
               <li>
                 <ChevronRightIcon class="w-4 h-4 text-gray-400" />
               </li>
-              <li>
-                <a :href="route('superadmin.dashboard')" class="text-gray-500 hover:text-[#dc2626] transition-colors duration-200 flex items-center">
+              <li v-if="title !== 'Dashboard'" class="flex items-center">
+                <ChevronRightIcon class="w-4 h-4 text-gray-300 mx-1" />
+                <span class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#dc2626] to-[#b91c1c] text-white text-sm font-semibold shadow-sm">
                   {{ title }}
-                </a>
+                </span>
               </li>
             </ol>
           </nav>

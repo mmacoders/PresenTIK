@@ -10,6 +10,7 @@ use App\Models\SystemSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -21,11 +22,17 @@ class DashboardController extends Controller
         $systemSettings = SystemSetting::first();
         $jamMasuk = $systemSettings ? $systemSettings->jam_masuk : '08:00:00';
         
+        // Get today's date using Carbon
+        $today = Carbon::now()->format('Y-m-d');
+        
         // Get all users (since we're removing bidang filter)
-        $users = User::all();
+        $users = User::where('role', 'user')->get();
         
         // Get today's attendance for all users
-        $todayAttendances = Absensi::where('tanggal', date('Y-m-d'))->with('user')->get();
+        $todayAttendances = Absensi::where('tanggal', $today)
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->get();
         
         // Calculate statistics
         $totalUsers = $users->count();
@@ -37,12 +44,12 @@ class DashboardController extends Controller
         $absentToday = $totalUsers - $presentToday;
         
         // Get leave requests for today
-        $leaveToday = Izin::where('tanggal_mulai', '<=', date('Y-m-d'))
-          ->where('tanggal_selesai', '>=', date('Y-m-d'))
+        $leaveToday = Izin::where('tanggal_mulai', '<=', $today)
+          ->where('tanggal_selesai', '>=', $today)
           ->count();
         
-        // Prepare data for the attendance table
-        $attendanceData = $this->prepareAttendanceData($users, $todayAttendances, $jamMasuk);
+        // Prepare data for the attendance table - ONLY users with attendance records
+        $attendanceData = $this->prepareAttendanceData($todayAttendances, $jamMasuk);
         
         return Inertia::render('Admin/Dashboard', [
             'admin' => $admin,
@@ -56,19 +63,20 @@ class DashboardController extends Controller
         ]);
     }
     
-    private function prepareAttendanceData($users, $attendances, $jamMasuk)
+    private function prepareAttendanceData($attendances, $jamMasuk)
     {
         $data = [];
         
-        foreach ($users as $user) {
-            $attendance = $attendances->firstWhere('user_id', $user->id);
+        // Only loop through attendances (users who have checked in today)
+        foreach ($attendances as $attendance) {
+            if (!$attendance->user) continue; // Skip if user not found
             
             $data[] = [
-                'name' => $user->name,
-                'checkIn' => $attendance ? $attendance->waktu_masuk : '-',
-                'checkOut' => $attendance ? $attendance->waktu_keluar : '-',
-                'status' => $this->determineStatus($attendance, $user, $jamMasuk),
-                'keterangan' => $attendance ? $attendance->keterangan : '-',
+                'name' => $attendance->user->name,
+                'checkIn' => $attendance->waktu_masuk ? Carbon::parse($attendance->waktu_masuk)->format('H:i:s') : '-',
+                'checkOut' => $attendance->waktu_keluar ? Carbon::parse($attendance->waktu_keluar)->format('H:i:s') : '-',
+                'status' => $this->determineStatus($attendance, $attendance->user, $jamMasuk),
+                'keterangan' => $attendance->keterangan ?? '-',
             ];
         }
         
@@ -123,8 +131,8 @@ class DashboardController extends Controller
         
         // Check if user has an active leave request
         $todayIzin = Izin::where('user_id', $user->id)
-            ->where('tanggal_mulai', '<=', date('Y-m-d'))
-            ->where('tanggal_selesai', '>=', date('Y-m-d'))
+            ->where('tanggal_mulai', '<=', Carbon::now()->format('Y-m-d'))
+            ->where('tanggal_selesai', '>=', Carbon::now()->format('Y-m-d'))
             ->first();
             
         if ($todayIzin) {

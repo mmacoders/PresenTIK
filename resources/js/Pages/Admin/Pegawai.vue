@@ -18,9 +18,10 @@
             Manajemen Pegawai
           </h2>
           <p class="text-gray-600 mt-2">
-            Kelola data pegawai, lihat detail, dan atur status keaktifan pegawai.
+            Kelola data pegawai dan lihat detail informasi pegawai.
           </p>
         </div>
+        
         <!-- Kanan: Search + Filter -->
         <div class="flex flex-col sm:flex-row gap-3">
           <!-- Search Bar -->
@@ -30,13 +31,25 @@
             />
             <input
               v-model="searchQuery"
+              type="text"
+              placeholder="Cari pegawai..."
+              class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm"
+            />
+          </div>
+          
+          <!-- Add Button -->
+          <button
+            @click="showCreateModal = true"
+            class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
+          >
+            <PlusCircleIcon class="w-4 h-4 mr-2" />
+            Tambah Pegawai
+          </button>
         </div>
       </div>
 
       <!-- Pegawai List Card -->
       <div class="bg-white shadow-md rounded-2xl">
-        <!-- Header Section -->
-
         <!-- Pegawai Table -->
         <div class="overflow-x-auto rounded-lg">
           <table class="min-w-full divide-y divide-gray-200">
@@ -94,35 +107,13 @@
                   </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center align-middle">
-                  <div class="inline-flex justify-center items-center space-x-3">
+                  <div class="inline-flex justify-center items-center">
                     <button 
                       @click="viewDetail(user)"
                       class="text-blue-600 hover:text-blue-800 p-1 rounded transition-all duration-300"
                       title="Detail"
                     >
                       <EyeIcon class="h-5 w-5" />
-                    </button>
-                    <button 
-                      @click="toggleUserStatus(user)"
-                      class="text-gray-600 hover:text-gray-800 p-1 rounded transition-all duration-300"
-                      :title="user.status === 'aktif' ? 'Nonaktifkan' : 'Aktifkan'"
-                    >
-                      <BanIcon v-if="user.status === 'aktif'" class="h-5 w-5" />
-                      <CheckIcon v-else class="h-5 w-5" />
-                    </button>
-                    <button 
-                      @click="editUser(user)"
-                      class="text-yellow-600 hover:text-yellow-800 p-1 rounded transition-all duration-300"
-                      title="Edit"
-                    >
-                      <EditIcon class="h-5 w-5" />
-                    </button>
-                    <button 
-                      @click="openDeleteModal(user)"
-                      class="text-red-600 hover:text-red-800 p-1 rounded transition-all duration-300"
-                      title="Hapus"
-                    >
-                      <TrashIcon class="h-5 w-5" />
                     </button>
                   </div>
                 </td>
@@ -150,7 +141,7 @@
         />
       </div>
 
-      <!-- Detail View Modal (Following Admin style) -->
+      <!-- Detail View Modal -->
       <div v-if="showDetailModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
           <div class="p-6">
@@ -247,136 +238,148 @@
       <!-- Create/Edit Modal -->
       <Modal :show="showCreateModal || showEditModal" @close="closeModal">
         <div class="p-6">
-          <div class="flex justify-between items-center mb-6">
-            <h3 class="text-lg font-medium text-gray-900">
-              {{ showEditModal ? 'Edit Pegawai' : 'Tambah Pegawai Baru' }}
-            </h3>
-            <button @click="closeModal" class="text-gray-400 hover:text-gray-500">
-              <XIcon class="h-6 w-6" />
-            </button>
+          <!-- Header -->
+          <div class="mb-6">
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <h3 class="text-xl font-bold text-gray-900">
+                  {{ showEditModal ? 'Edit Data Pegawai' : 'Tambah Pegawai Baru' }}
+                </h3>
+                <p class="text-sm text-gray-600 mt-1">
+                  {{ showEditModal ? 'Perbarui informasi data pegawai' : 'Lengkapi formulir di bawah untuk menambahkan pegawai baru' }}
+                </p>
+              </div>
+              <button @click="closeModal" class="text-gray-400 hover:text-gray-500">
+                <XIcon class="h-6 w-6" />
+              </button>
+            </div>
+            <div class="border-b border-gray-200"></div>
           </div>
 
           <form @submit.prevent="handleSubmit" class="space-y-6">
-            <!-- Nama Lengkap -->
-            <div>
-              <InputLabel for="name" value="Nama Lengkap" />
-              <TextInput
-                id="name"
-                v-model="userForm.name"
-                type="text"
-                class="mt-1 block w-full"
-                placeholder="Masukkan nama lengkap"
-                required
-              />
-              <InputError :message="userForm.errors.name" class="mt-2" />
-            </div>
-
-            <!-- Email -->
-            <div>
-              <InputLabel for="email" value="Email" />
-              <TextInput
-                id="email"
-                v-model="userForm.email"
-                type="email"
-                class="mt-1 block w-full"
-                placeholder="email@example.com"
-                required
-              />
-              <InputError :message="userForm.errors.email" class="mt-2" />
-            </div>
-
-            <!-- No HP -->
-            <div>
-              <InputLabel for="no_hp" value="Nomor HP" />
-              <TextInput
-                id="no_hp"
-                v-model="userForm.no_hp"
-                type="text"
-                class="mt-1 block w-full"
-                placeholder="08xxxxxxxxxx"
-              />
-              <InputError :message="userForm.errors.no_hp" class="mt-2" />
-            </div>
-
+            <!-- Form Fields in 2 Columns -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Pangkat -->
-              <div>
-                <InputLabel for="pangkat" value="Pangkat" />
-                <TextInput
-                  id="pangkat"
-                  v-model="userForm.pangkat"
-                  type="text"
-                  class="mt-1 block w-full"
-                  placeholder="Contoh: Bripda"
-                />
-                <InputError :message="userForm.errors.pangkat" class="mt-2" />
+              <!-- Column 1 (Left) -->
+              <div class="space-y-4">
+                <!-- Nama Lengkap -->
+                <div>
+                  <InputLabel for="name" value="Nama Lengkap" />
+                  <TextInput
+                    id="name"
+                    v-model="userForm.name"
+                    type="text"
+                    class="mt-1 block w-full"
+                    placeholder="Masukkan nama lengkap"
+                    required
+                  />
+                  <InputError :message="userForm.errors.name" class="mt-2" />
+                </div>
+
+                <!-- Email -->
+                <div>
+                  <InputLabel for="email" value="Email" />
+                  <TextInput
+                    id="email"
+                    v-model="userForm.email"
+                    type="email"
+                    class="mt-1 block w-full"
+                    placeholder="email@example.com"
+                    required
+                  />
+                  <InputError :message="userForm.errors.email" class="mt-2" />
+                </div>
+
+                <!-- No HP -->
+                <div>
+                  <InputLabel for="no_hp" value="Nomor HP" />
+                  <TextInput
+                    id="no_hp"
+                    v-model="userForm.no_hp"
+                    type="text"
+                    class="mt-1 block w-full"
+                    placeholder="08xxxxxxxxxx"
+                  />
+                  <InputError :message="userForm.errors.no_hp" class="mt-2" />
+                </div>
+
+                <!-- Pangkat -->
+                <div>
+                  <InputLabel for="pangkat" value="Pangkat" />
+                  <TextInput
+                    id="pangkat"
+                    v-model="userForm.pangkat"
+                    type="text"
+                    class="mt-1 block w-full"
+                    placeholder="Masukkan pangkat"
+                  />
+                  <InputError :message="userForm.errors.pangkat" class="mt-2" />
+                </div>
               </div>
 
-              <!-- Jabatan -->
-              <div>
-                <InputLabel for="jabatan" value="Jabatan" />
-                <TextInput
-                  id="jabatan"
-                  v-model="userForm.jabatan"
-                  type="text"
-                  class="mt-1 block w-full"
-                  placeholder="Contoh: Staff IT"
-                />
-                <InputError :message="userForm.errors.jabatan" class="mt-2" />
+              <!-- Column 2 (Right) -->
+              <div class="space-y-4">
+                <!-- NRP -->
+                <div>
+                  <InputLabel for="nrp" value="NRP" />
+                  <TextInput
+                    id="nrp"
+                    v-model="userForm.nrp"
+                    type="text"
+                    class="mt-1 block w-full"
+                    placeholder="Masukkan NRP"
+                  />
+                  <InputError :message="userForm.errors.nrp" class="mt-2" />
+                </div>
+
+                <!-- NIP -->
+                <div>
+                  <InputLabel for="nip" value="NIP" />
+                  <TextInput
+                    id="nip"
+                    v-model="userForm.nip"
+                    type="text"
+                    class="mt-1 block w-full"
+                    placeholder="Masukkan NIP"
+                  />
+                  <InputError :message="userForm.errors.nip" class="mt-2" />
+                </div>
+
+                <!-- Jabatan -->
+                <div>
+                  <InputLabel for="jabatan" value="Jabatan" />
+                  <TextInput
+                    id="jabatan"
+                    v-model="userForm.jabatan"
+                    type="text"
+                    class="mt-1 block w-full"
+                    placeholder="Masukkan jabatan"
+                  />
+                  <InputError :message="userForm.errors.jabatan" class="mt-2" />
+                </div>
+
+                <!-- Status -->
+                <div>
+                  <InputLabel for="status" value="Status" />
+                  <select
+                    id="status"
+                    v-model="userForm.status"
+                    class="mt-1 block w-full border-gray-300 focus:border-red-500 focus:ring-red-500 rounded-md shadow-sm"
+                  >
+                    <option value="aktif">Aktif</option>
+                    <option value="nonaktif">Nonaktif</option>
+                  </select>
+                  <InputError :message="userForm.errors.status" class="mt-2" />
+                </div>
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- NRP -->
-              <div>
-                <InputLabel for="nrp" value="NRP (Opsional)" />
-                <TextInput
-                  id="nrp"
-                  v-model="userForm.nrp"
-                  type="text"
-                  class="mt-1 block w-full"
-                  placeholder="Nomor Registrasi Pokok"
-                />
-                <InputError :message="userForm.errors.nrp" class="mt-2" />
-              </div>
-
-              <!-- NIP -->
-              <div>
-                <InputLabel for="nip" value="NIP (Opsional)" />
-                <TextInput
-                  id="nip"
-                  v-model="userForm.nip"
-                  type="text"
-                  class="mt-1 block w-full"
-                  placeholder="Nomor Induk Pegawai"
-                />
-                <InputError :message="userForm.errors.nip" class="mt-2" />
-              </div>
-            </div>
-
-            <!-- Status -->
-            <div>
-              <InputLabel for="status" value="Status" />
-              <select
-                id="status"
-                v-model="userForm.status"
-                class="mt-1 block w-full border-gray-300 focus:border-red-500 focus:ring-red-500 rounded-md shadow-sm"
-              >
-                <option value="aktif">Aktif</option>
-                <option value="nonaktif">Nonaktif</option>
-              </select>
-              <InputError :message="userForm.errors.status" class="mt-2" />
-            </div>
-
-            <div class="flex justify-end gap-3 mt-6">
-              <SecondaryButton @click="closeModal" type="button">
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+              <SecondaryButton type="button" @click="closeModal">
                 Batal
               </SecondaryButton>
-              <PrimaryButton
-                :class="{ 'opacity-25': userForm.processing }"
-                :disabled="userForm.processing"
-              >
-                {{ showEditModal ? 'Simpan Perubahan' : 'Tambah Pegawai' }}
+              <PrimaryButton type="submit" :disabled="userForm.processing">
+                {{ showEditModal ? 'Update' : 'Simpan' }}
               </PrimaryButton>
             </div>
           </form>
@@ -385,14 +388,13 @@
 
       <!-- Delete Confirmation Modal -->
       <ConfirmModal
-        :open="showDeleteModal"
-        title="Hapus Pegawai"
-        message="Apakah Anda yakin ingin menghapus pegawai ini? Tindakan ini tidak dapat dibatalkan."
-        type="danger"
-        confirm-text="Hapus"
-        cancel-text="Batal"
+        :show="showDeleteModal"
         @close="showDeleteModal = false"
         @confirm="confirmDelete"
+        title="Hapus Pegawai"
+        message="Apakah Anda yakin ingin menghapus pegawai ini? Tindakan ini tidak dapat dibatalkan."
+        confirmText="Hapus"
+        cancelText="Batal"
       />
     </div>
   </AdminLayout>
@@ -414,14 +416,9 @@ import {
   SearchIcon,
   UsersIcon,
   EyeIcon,
-  LockIcon,
   UserIcon,
   XIcon,
-  BanIcon,
-  CheckIcon,
-  PlusCircleIcon,
-  EditIcon,
-  TrashIcon
+  PlusCircleIcon
 } from 'lucide-vue-next';
 import debounce from 'lodash/debounce';
 
@@ -552,17 +549,6 @@ const viewDetail = (user) => {
 const closeDetailModal = () => {
   showDetailModal.value = false;
   detailUser.value = {};
-};
-
-const toggleUserStatus = (user) => {
-  if (confirm(`Apakah Anda yakin ingin ${user.status === 'aktif' ? 'menonaktifkan' : 'mengaktifkan'} pegawai ini?`)) {
-    router.patch(route('admin.pegawai.toggle-status', user), {}, {
-      onSuccess: () => {
-        // Reload the page to show updated data
-        router.reload({ only: ['users'] });
-      }
-    });
-  }
 };
 
 const handleImageError = (event) => {

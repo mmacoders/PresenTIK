@@ -122,6 +122,16 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- Refresh Button -->
+                    <button
+                        @click="refreshData"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 flex items-center justify-center"
+                        title="Refresh Data"
+                        :disabled="isRefreshing"
+                    >
+                        <RefreshCwIcon class="h-5 w-5" :class="{ 'animate-spin': isRefreshing }" />
+                    </button>
                 </div>
             </div>
 
@@ -133,6 +143,7 @@
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Tanggal</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Nama</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Role</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Jam Masuk</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Keterangan</th>
@@ -149,6 +160,14 @@
                                     <div class="text-sm font-medium text-gray-900">{{ attendance.user?.name || '-' }}</div>
                                     <div class="text-sm text-gray-500">{{ attendance.user?.email || '' }}</div>
                                 </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span 
+                                        :class="getRoleClass(attendance.user?.role)"
+                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                    >
+                                        {{ getRoleText(attendance.user?.role) }}
+                                    </span>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ attendance.waktu_masuk || '-' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span
@@ -163,7 +182,7 @@
                                 </td>
                             </tr>
                             <tr v-if="!attendancesData || attendancesData.length === 0">
-                                <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                                <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
                                     Tidak ada data presensi
                                 </td>
                             </tr>
@@ -243,7 +262,8 @@ import {
     FileSpreadsheetIcon, 
     FileTextIcon,
     ChevronLeftIcon,
-    ChevronRightIcon
+    ChevronRightIcon,
+    RefreshCwIcon
 } from 'lucide-vue-next';
 
 // Props
@@ -257,6 +277,7 @@ const showFilter = ref(false);
 const showExportDropdown = ref(false);
 const filterButton = ref(null);
 const filterPopover = ref(null);
+const isRefreshing = ref(false);
 
 const filterForm = useForm({
     start_date: props.filters?.start_date || '',
@@ -307,6 +328,34 @@ const getStatusClass = (attendance) => {
         return 'bg-red-100 text-red-800';
     } else {
         return 'bg-gray-100 text-gray-800';
+    }
+};
+
+const getRoleText = (role) => {
+    if (!role) return '-';
+    switch (role.toLowerCase()) {
+        case 'superadmin':
+            return 'Super Admin';
+        case 'admin':
+            return 'Admin';
+        case 'user':
+            return 'Pegawai';
+        default:
+            return role;
+    }
+};
+
+const getRoleClass = (role) => {
+    if (!role) return 'bg-gray-100 text-gray-800';
+    switch (role.toLowerCase()) {
+        case 'superadmin':
+            return 'bg-purple-100 text-purple-800';
+        case 'admin':
+            return 'bg-indigo-100 text-indigo-800';
+        case 'user':
+            return 'bg-gray-100 text-gray-800';
+        default:
+            return 'bg-gray-100 text-gray-800';
     }
 };
 
@@ -364,6 +413,17 @@ const exportToPDF = () => {
 const fetchPage = (url) => {
     if (!url) return;
     router.get(url, filterForm.data(), { preserveState: true });
+};
+
+const refreshData = () => {
+    isRefreshing.value = true;
+    router.reload({
+        only: ['attendances'],
+        preserveScroll: true,
+        onFinish: () => {
+            isRefreshing.value = false;
+        }
+    });
 };
 
 // Click outside handler for filter popover
