@@ -43,6 +43,7 @@ class SystemSettingController extends Controller
             'location_radius' => 'required|integer|min:10|max:1000',
             'disable_location_validation' => 'boolean',
             'jam_masuk' => 'required|string|regex:/^\d{2}:\d{2}(:\d{2})?$/',
+            'presensi_start_time' => 'required|string|regex:/^\d{2}:\d{2}(:\d{2})?$/',
             'grace_period_minutes' => 'required|integer|min:0|max:60',
             'cutoff_time' => 'required|string|regex:/^\d{2}:\d{2}(:\d{2})?$/',
         ], [
@@ -59,6 +60,8 @@ class SystemSettingController extends Controller
             'disable_location_validation.boolean' => 'Nilai validasi lokasi harus berupa boolean.',
             'jam_masuk.required' => 'Jam masuk wajib diisi.',
             'jam_masuk.regex' => 'Format jam masuk tidak valid. Gunakan format HH:mm atau HH:mm:ss.',
+            'presensi_start_time.required' => 'Waktu mulai presensi wajib diisi.',
+            'presensi_start_time.regex' => 'Format waktu mulai presensi tidak valid. Gunakan format HH:mm atau HH:mm:ss.',
             'grace_period_minutes.required' => 'Grace period wajib diisi.',
             'grace_period_minutes.integer' => 'Grace period harus berupa angka bulat.',
             'grace_period_minutes.min' => 'Grace period minimal 0 menit.',
@@ -72,14 +75,20 @@ class SystemSettingController extends Controller
             // Ensure all times are in the same format for comparison (HH:mm:ss)
             $jamMasuk = strlen($request->jam_masuk) === 5 ? $request->jam_masuk . ':00' : $request->jam_masuk;
             $cutoffTime = strlen($request->cutoff_time) === 5 ? $request->cutoff_time . ':00' : $request->cutoff_time;
+            $presensiStartTime = strlen($request->presensi_start_time) === 5 ? $request->presensi_start_time . ':00' : $request->presensi_start_time;
             
             // Convert to DateTime for comparison
             try {
                 $masukTime = new \DateTime($jamMasuk);
                 $cutoffTimeObj = new \DateTime($cutoffTime);
+                $startTimeObj = new \DateTime($presensiStartTime);
                 
                 if ($cutoffTimeObj <= $masukTime) {
                     $validator->errors()->add('cutoff_time', 'Cutoff time harus setelah jam masuk.');
+                }
+                
+                if ($startTimeObj >= $masukTime) {
+                    $validator->errors()->add('presensi_start_time', 'Waktu mulai presensi harus sebelum jam masuk.');
                 }
             } catch (\Exception $e) {
                 // If there's an error parsing times, add validation error
@@ -114,6 +123,7 @@ class SystemSettingController extends Controller
         
         // Handle time formatting - ensure we store in HH:mm:ss format
         $settings->jam_masuk = strlen($request->jam_masuk) === 5 ? $request->jam_masuk . ':00' : $request->jam_masuk;
+        $settings->presensi_start_time = strlen($request->presensi_start_time) === 5 ? $request->presensi_start_time . ':00' : $request->presensi_start_time;
         $settings->cutoff_time = strlen($request->cutoff_time) === 5 ? $request->cutoff_time . ':00' : $request->cutoff_time;
         
         $settings->save();
