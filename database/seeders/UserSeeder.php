@@ -49,5 +49,16 @@ class UserSeeder extends Seeder
                 'status' => 'active',
             ]
         );
+
+        User::firstOrCreate(
+            ['email' => 'pegawai2@polda.go.id'],
+            [
+                'name' => 'Pegawai 2',
+                'password' => Hash::make('password'),
+                'role' => 'user',
+                'jabatan' => 'Staff',
+                'status' => 'active',
+            ]
+        );
     }
 }

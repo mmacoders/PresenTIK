@@ -24,7 +24,13 @@
           <!-- Page Title -->
           <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900">Absensi Harian</h1>
-            <p class="text-gray-600 mt-2">{{ currentDate }}</p>
+            <div class="flex items-center mt-2 text-gray-600">
+              <CalendarIcon class="w-5 h-5 mr-2" />
+              <span>{{ currentDate }}</span>
+              <span class="mx-2">|</span>
+              <ClockIcon class="w-5 h-5 mr-2" />
+              <span class="font-mono font-bold text-lg text-[#dc2626]">{{ currentTime }}</span>
+            </div>
           </div>
 
           <!-- Success/Error Messages -->
@@ -319,7 +325,7 @@
 import Header from '@/Components/Header.vue';
 import Sidebar from '@/Components/Sidebar.vue';
 import { router } from '@inertiajs/vue3';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import Swal from 'sweetalert2';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -341,7 +347,8 @@ import {
   Loader2Icon,
   CheckIcon,
   ToggleLeftIcon,
-  ToggleRightIcon
+  ToggleRightIcon,
+  CalendarIcon
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -407,10 +414,35 @@ const currentDate = new Date().toLocaleDateString('id-ID', {
     day: 'numeric'
 });
 
-// Computed properties for check-in/check-out status
+const currentTime = ref(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+
+// Update time every second
+let timeInterval;
+onMounted(() => {
+  // Initialize map
+  initMap();
+  
+  // Always auto-detect location when page loads
+  setTimeout(() => {
+    getCurrentLocation();
+  }, 1000);
+  
+  // Start clock
+  timeInterval = setInterval(() => {
+    currentTime.value = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }, 1000);
+});
+
+onUnmounted(() => {
+  if (timeInterval) {
+    clearInterval(timeInterval);
+  }
+});
 const hasCheckedIn = computed(() => {
   return props.todayAttendance && props.todayAttendance.waktu_masuk;
 });
+
+
 
 // Computed properties for unified attendance card
 const getAttendanceCardTitle = computed(() => {
@@ -568,8 +600,8 @@ const getCurrentLocation = () => {
         autoLocationDetected.value = true;
         
         // Show success message only when manually triggered or on initial load
-        // Skip showing message on automatic check-in/check-out to avoid interrupting user
-        if (!hasCheckedIn.value && !hasCheckedOut.value) {
+        // Skip showing message on automatic check-in to avoid interrupting user
+        if (!hasCheckedIn.value) {
           Swal.fire({
             icon: 'success',
             title: 'Berhasil!',
@@ -599,17 +631,17 @@ const getCurrentLocation = () => {
   }
 };
 
-// Automatically get location when page loads
-onMounted(() => {
-  // Initialize map
-  initMap();
-  
-  // Always auto-detect location when page loads
-  // Small delay to ensure page is fully loaded
-  setTimeout(() => {
-    getCurrentLocation();
-  }, 1000);
-});
+// Automatically get location when page loads - MOVED TO TOP
+// onMounted(() => {
+//   // Initialize map
+//   initMap();
+//   
+//   // Always auto-detect location when page loads
+//   // Small delay to ensure page is fully loaded
+//   setTimeout(() => {
+//     getCurrentLocation();
+//   }, 1000);
+// });
 
 // Initialize map
 const initMap = () => {

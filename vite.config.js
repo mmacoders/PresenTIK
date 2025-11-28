@@ -19,4 +19,11 @@ export default defineConfig({
             },
         }),
     ],
+    // server: {
+    //     host: '0.0.0.0',
+    //     port: 5173,
+    //     hmr: {
+    //         host: '10.35.30.139', // GANTI dengan IP laptop kamu
+    //     },
+    // },
 });
