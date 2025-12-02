@@ -121,7 +121,7 @@ const submit = () => {
         
         <div class="absolute bottom-6 text-center w-full z-10">
             <p class="text-slate-400 text-xs tracking-wider">
-                &copy; 2024 POLDA TIK. ALL RIGHTS RESERVED.
+                &copy; {{ new Date().getFullYear() }} POLDA TIK. ALL RIGHTS RESERVED.
             </p>
         </div>
     </div>

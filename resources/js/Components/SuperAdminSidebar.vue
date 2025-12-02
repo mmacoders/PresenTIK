@@ -136,14 +136,8 @@ const menuItems = [
     component: 'a'
   },
   {
-    name: 'Kelola Pegawai',
-    href: '/superadmin/pegawai',
-    icon: UsersIcon,
-    component: 'a'
-  },
-  {
-    name: 'Kelola Admin',
-    href: '/superadmin/admin',
+    name: 'Kelola User',
+    href: '/superadmin/users',
     icon: UsersIcon,
     component: 'a'
   },

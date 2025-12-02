@@ -39,6 +39,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::patch('/admin/pegawai/{user}', [AdminPegawaiController::class, 'update'])->name('admin.pegawai.update');
     Route::delete('/admin/pegawai/{user}', [AdminPegawaiController::class, 'destroy'])->name('admin.pegawai.destroy');
     Route::patch('/admin/pegawai/{user}/toggle-status', [AdminPegawaiController::class, 'toggleStatus'])->name('admin.pegawai.toggle-status');
+    Route::patch('/admin/pegawai/{user}/reset-password', [AdminPegawaiController::class, 'resetPassword'])->name('admin.pegawai.reset-password');
     Route::get('/admin/laporan', [AdminLaporanController::class, 'index'])->name('admin.laporan');
     Route::post('/admin/laporan/export', [AdminLaporanController::class, 'export'])->name('admin.laporan.export');
     // Izin & Cuti routes
@@ -71,6 +72,9 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
     Route::patch('/superadmin/admin/{user}/toggle-status', [SuperAdminAdminController::class, 'toggleStatus'])->name('superadmin.admin.toggle-status');
     Route::patch('/superadmin/admin/{user}/transfer', [SuperAdminAdminController::class, 'transfer'])->name('superadmin.admin.transfer');
     
+    // User Management (Combined Pegawai & Admin)
+    Route::get('/superadmin/users', [App\Http\Controllers\SuperAdmin\KelolaUserController::class, 'index'])->name('superadmin.users');
+
     // Pegawai Management
     Route::get('/superadmin/pegawai', [SuperAdminPegawaiController::class, 'index'])->name('superadmin.pegawai');
     Route::post('/superadmin/pegawai', [SuperAdminPegawaiController::class, 'store'])->name('superadmin.pegawai.store');
@@ -81,8 +85,8 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
     
     // Laporan Global
     Route::get('/superadmin/laporan', [SuperAdminLaporanController::class, 'index'])->name('superadmin.laporan');
-    Route::post('/superadmin/laporan/export/excel', [SuperAdminLaporanController::class, 'exportExcel'])->name('superadmin.laporan.export.excel');
-    Route::post('/superadmin/laporan/export/pdf', [SuperAdminLaporanController::class, 'exportPDF'])->name('superadmin.laporan.export.pdf');
+    Route::get('/superadmin/laporan/export/excel', [SuperAdminLaporanController::class, 'exportExcel'])->name('superadmin.laporan.export.excel');
+    Route::get('/superadmin/laporan/export/pdf', [SuperAdminLaporanController::class, 'exportPDF'])->name('superadmin.laporan.export.pdf');
     
     // System Settings
     Route::get('/superadmin/settings', [SuperAdminSystemSettingController::class, 'index'])->name('superadmin.settings');

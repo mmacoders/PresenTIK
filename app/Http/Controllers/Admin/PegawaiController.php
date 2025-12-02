@@ -215,4 +215,18 @@ class PegawaiController extends Controller
         
         return redirect()->back()->with('success', 'Status pegawai berhasil diubah.');
     }
+
+    public function resetPassword(User $user)
+    {
+        // Ensure user is a pegawai (user role)
+        if ($user->role !== 'user') {
+            abort(404);
+        }
+        
+        $user->update([
+            'password' => Hash::make('password'),
+        ]);
+        
+        return redirect()->back()->with('success', 'Password pegawai berhasil direset menjadi "password".');
+    }
 }

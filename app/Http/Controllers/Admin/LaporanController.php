@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Absensi;
+use App\Models\Izin;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
 
 class LaporanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $admin = auth()->user();
         
@@ -19,16 +20,40 @@ class LaporanController extends Controller
         $now = Carbon::now();
         $startDate = request('start_date', $now->copy()->startOfMonth()->format('Y-m-d'));
         $endDate = request('end_date', $now->copy()->endOfMonth()->format('Y-m-d'));
+        $search = request('search');
         
         // Get all users including admin and superadmin for monitoring
         $users = User::all();
         
-        // Get attendance records for the date range (all roles)
-        $attendances = Absensi::whereBetween('tanggal', [$startDate, $endDate])
+        // --- Attendances Query ---
+        $attendancesQuery = Absensi::whereBetween('tanggal', [$startDate, $endDate])
                     ->with('user')
                     ->orderBy('tanggal', 'desc')
-                    ->orderBy('created_at', 'desc') // Show latest entries first
-                    ->get();
+                    ->orderBy('created_at', 'desc');
+
+        if ($search) {
+            $attendancesQuery->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
+            });
+        }
+        
+        $attendances = $attendancesQuery->paginate(10, ['*'], 'attendances_page')->withQueryString();
+
+        // --- Permissions (Izin) Query ---
+        $permissionsQuery = Izin::with('user')
+            ->where(function($q) use ($startDate, $endDate) {
+                $q->whereBetween('tanggal_mulai', [$startDate, $endDate])
+                  ->orWhereBetween('tanggal_selesai', [$startDate, $endDate]);
+            })
+            ->orderBy('created_at', 'desc');
+
+        if ($search) {
+            $permissionsQuery->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
+            });
+        }
+
+        $permissions = $permissionsQuery->paginate(10, ['*'], 'permissions_page')->withQueryString();
         
         // Set no-cache headers
         header('Cache-Control: no-cache, no-store, must-revalidate');
@@ -38,8 +63,8 @@ class LaporanController extends Controller
         return Inertia::render('Admin/Laporan', [
             'users' => $users,
             'attendances' => $attendances,
-            'startDate' => $startDate,
-            'endDate' => $endDate,
+            'permissions' => $permissions,
+            'filters' => $request->only(['start_date', 'end_date', 'search']),
         ]);
     }
     
@@ -50,13 +75,21 @@ class LaporanController extends Controller
         // Get date range
         $startDate = $request->start_date;
         $endDate = $request->end_date;
+        $search = $request->search;
         
         // Get attendance records for export (all roles)
-        $attendances = Absensi::whereBetween('tanggal', [$startDate, $endDate])
+        $attendancesQuery = Absensi::whereBetween('tanggal', [$startDate, $endDate])
                     ->with('user')
                     ->orderBy('tanggal', 'desc')
-                    ->orderBy('created_at', 'desc')
-                    ->get();
+                    ->orderBy('created_at', 'desc');
+
+        if ($search) {
+            $attendancesQuery->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
+            });
+        }
+        
+        $attendances = $attendancesQuery->get();
         
         // Create CSV content with Role column
         $csvData = "Nama,Role,Tanggal,Masuk,Keluar,Status,Keterangan\n";

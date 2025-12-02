@@ -115,6 +115,27 @@
                     >
                       <EyeIcon class="h-5 w-5" />
                     </button>
+                    <button 
+                      @click="editUser(user)"
+                      class="text-yellow-600 hover:text-yellow-800 p-1 rounded transition-all duration-300 ml-1"
+                      title="Edit"
+                    >
+                      <PencilIcon class="h-5 w-5" />
+                    </button>
+                    <button 
+                      @click="openResetPasswordModal(user)"
+                      class="text-orange-600 hover:text-orange-800 p-1 rounded transition-all duration-300 ml-1"
+                      title="Reset Password"
+                    >
+                      <KeyIcon class="h-5 w-5" />
+                    </button>
+                    <button 
+                      @click="openDeleteModal(user)"
+                      class="text-red-600 hover:text-red-800 p-1 rounded transition-all duration-300 ml-1"
+                      title="Hapus"
+                    >
+                      <TrashIcon class="h-5 w-5" />
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -396,6 +417,17 @@
         confirmText="Hapus"
         cancelText="Batal"
       />
+
+      <!-- Reset Password Confirmation Modal -->
+      <ConfirmModal
+        :show="showResetPasswordModal"
+        @close="showResetPasswordModal = false"
+        @confirm="confirmResetPassword"
+        title="Reset Password Pegawai"
+        message="Apakah Anda yakin ingin mereset password pegawai ini menjadi default ('password')? Tindakan ini tidak dapat dibatalkan."
+        confirmText="Reset Password"
+        cancelText="Batal"
+      />
     </div>
   </AdminLayout>
 </template>
@@ -418,7 +450,10 @@ import {
   EyeIcon,
   UserIcon,
   XIcon,
-  PlusCircleIcon
+  PlusCircleIcon,
+  KeyIcon,
+  PencilIcon,
+  TrashIcon
 } from 'lucide-vue-next';
 import debounce from 'lodash/debounce';
 
@@ -434,6 +469,8 @@ const showDetailModal = ref(false);
 const editingUser = ref(null);
 const detailUser = ref({});
 const userToDelete = ref(null);
+const showResetPasswordModal = ref(false);
+const userToResetPassword = ref(null);
 
 // Initialize form
 const userForm = useForm({
@@ -609,12 +646,30 @@ const confirmDelete = () => {
   }
 };
 
+const openResetPasswordModal = (user) => {
+  userToResetPassword.value = user;
+  showResetPasswordModal.value = true;
+};
+
+const confirmResetPassword = () => {
+  if (userToResetPassword.value) {
+    router.patch(route('admin.pegawai.reset-password', userToResetPassword.value.id), {}, {
+      onSuccess: () => {
+        showResetPasswordModal.value = false;
+        userToResetPassword.value = null;
+      }
+    });
+  }
+};
+
 const closeModal = () => {
   showCreateModal.value = false;
   showEditModal.value = false;
   showDeleteModal.value = false;
+  showResetPasswordModal.value = false;
   editingUser.value = null;
   userToDelete.value = null;
+  userToResetPassword.value = null;
   userForm.reset();
 };
 

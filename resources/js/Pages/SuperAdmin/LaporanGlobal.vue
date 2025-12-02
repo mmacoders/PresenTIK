@@ -27,20 +27,49 @@
                     </div>
 
                     <!-- Page Title + Search + Filter + Export -->
-                    <div class="mb-6 flex flex-col gap-4">
-                        <!-- Title + Description -->
-                        <div>
-                            <h1 class="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
-                                <FileTextIcon class="text-red-600 w-6 h-6 md:w-8 md:h-8" />
-                                Laporan Global Presensi
-                            </h1>
-                            <p class="text-sm md:text-base text-gray-600 mt-1 md:mt-2">Rekapitulasi presensi seluruh pegawai POLDA TIK.</p>
-                        </div>
+                    <!-- Page Title -->
+                    <div class="mb-6">
+                        <h1 class="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
+                            <FileTextIcon class="text-red-600 w-6 h-6 md:w-8 md:h-8" />
+                            Laporan Global Presensi
+                        </h1>
+                        <p class="text-sm md:text-base text-gray-600 mt-1 md:mt-2">Rekapitulasi presensi seluruh pegawai POLDA TIK.</p>
+                    </div>
+
+                    <!-- Tabs & Controls Toolbar -->
+                    <div class="flex flex-col lg:flex-row justify-between items-end border-b border-gray-200 mb-6 gap-4">
+                        <!-- Tabs -->
+                        <nav class="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
+                            <button
+                                @click="activeTab = 'presensi'"
+                                :class="[
+                                    activeTab === 'presensi'
+                                        ? 'border-red-500 text-red-600'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                                    'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2'
+                                ]"
+                            >
+                                <ClipboardListIcon class="w-5 h-5" />
+                                Presensi
+                            </button>
+                            <button
+                                @click="activeTab = 'izin'"
+                                :class="[
+                                    activeTab === 'izin'
+                                        ? 'border-red-500 text-red-600'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                                    'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2'
+                                ]"
+                            >
+                                <CalendarIcon class="w-5 h-5" />
+                                Izin
+                            </button>
+                        </nav>
 
                         <!-- Controls: Search + Filter + Export -->
-                        <div class="flex flex-col md:flex-row gap-3">
+                        <div class="flex flex-col md:flex-row gap-3 w-full lg:w-auto pb-2">
                             <!-- Search Bar -->
-                            <div class="relative w-full md:w-auto md:flex-1">
+                            <div class="relative w-full md:w-64">
                                 <SearchIcon
                                     class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
                                 />
@@ -48,21 +77,21 @@
                                     v-model="searchQuery"
                                     type="text"
                                     placeholder="Cari laporan..."
-                                    class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full"
+                                    class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full text-sm"
                                     @input="handleSearch"
                                 />
                             </div>
 
-                            <div class="flex gap-3">
+                            <div class="flex gap-2">
                                 <!-- Filter Button -->
-                                <div class="relative flex-1 md:flex-none">
+                                <div class="relative">
                                     <button
                                         ref="filterButton"
                                         @click="showFilter = !showFilter"
-                                        class="w-full md:w-auto px-3 py-2 border rounded-lg flex items-center justify-center space-x-2 transition-colors duration-200"
+                                        class="px-3 py-2 border rounded-lg flex items-center justify-center space-x-2 transition-colors duration-200 text-sm"
                                         :class="isFilterActive ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:bg-gray-50'"
                                     >
-                                        <FilterIcon class="h-5 w-5" :class="isFilterActive ? 'text-red-600' : 'text-gray-500'" />
+                                        <FilterIcon class="h-4 w-4" :class="isFilterActive ? 'text-red-600' : 'text-gray-500'" />
                                         <span>Filter</span>
                                     </button>
 
@@ -70,7 +99,7 @@
                                     <div 
                                         v-if="showFilter" 
                                         ref="filterPopover"
-                                        class="absolute right-0 left-0 md:left-auto mt-2 bg-white shadow-lg rounded-xl border p-4 z-50 w-full md:w-80"
+                                        class="absolute right-0 mt-2 bg-white shadow-lg rounded-xl border p-4 z-50 w-72"
                                     >
                                         <div class="space-y-4">
                                             <div>
@@ -78,7 +107,7 @@
                                                 <input
                                                     type="date"
                                                     v-model="filters.start_date"
-                                                    class="w-full border border-gray-300 rounded-lg p-2"
+                                                    class="w-full border border-gray-300 rounded-lg p-2 text-sm"
                                                 />
                                             </div>
                                             
@@ -87,7 +116,7 @@
                                                 <input
                                                     type="date"
                                                     v-model="filters.end_date"
-                                                    class="w-full border border-gray-300 rounded-lg p-2"
+                                                    class="w-full border border-gray-300 rounded-lg p-2 text-sm"
                                                 />
                                             </div>
                                         </div>
@@ -95,13 +124,13 @@
                                         <div class="mt-6 flex justify-end gap-3">
                                             <button
                                                 @click="resetFilters"
-                                                class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-all duration-200 text-sm"
+                                                class="border border-gray-300 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-all duration-200 text-xs"
                                             >
                                                 Reset
                                             </button>
                                             <button
                                                 @click="applyFilters"
-                                                class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-all duration-200 text-sm"
+                                                class="bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700 transition-all duration-200 text-xs"
                                             >
                                                 Terapkan
                                             </button>
@@ -110,14 +139,14 @@
                                 </div>
 
                                 <!-- Export Dropdown -->
-                                <div class="relative flex-1 md:flex-none">
+                                <div class="relative">
                                     <button
                                         @click="showExportDropdown = !showExportDropdown"
-                                        class="w-full md:w-auto px-4 py-2 bg-[#C62828] text-white rounded-lg hover:bg-[#b71c1c] transition-all duration-300 flex items-center justify-center gap-2"
+                                        class="px-3 py-2 bg-[#C62828] text-white rounded-lg hover:bg-[#b71c1c] transition-all duration-300 flex items-center justify-center gap-2 text-sm"
                                         title="Export"
                                     >
-                                        <FileDownIcon class="h-5 w-5" />
-                                        <span class="md:hidden">Export</span>
+                                        <FileDownIcon class="h-4 w-4" />
+                                        <span class="hidden md:inline">Export</span>
                                     </button>
 
                                     <!-- Export Dropdown Menu -->
@@ -146,7 +175,7 @@
                     </div>
 
                     <!-- Attendance Table -->
-                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div v-if="activeTab === 'presensi'" class="bg-white rounded-xl shadow-md overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="min-w-full text-sm">
                                 <thead class="bg-red-600 text-white text-left">
@@ -189,48 +218,96 @@
                                 </tbody>
                             </table>
                         </div>
-                        
-                        <!-- Pagination -->
-                        <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                            <div class="flex-1 flex justify-between sm:hidden">
-                                <a :href="attendances.prev_page_url" 
-                                   :class="attendances.prev_page_url ? 'relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50' : 'relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed'">
-                                    Sebelumnya
-                                </a>
-                                <a :href="attendances.next_page_url" 
-                                   :class="attendances.next_page_url ? 'ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50' : 'ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed'">
-                                    Berikutnya
-                                </a>
-                            </div>
-                            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                                <div>
-                                    <p class="text-sm text-gray-700">
-                                        Menampilkan
-                                        <span class="font-medium">{{ attendances.from }}</span>
-                                        sampai
-                                        <span class="font-medium">{{ attendances.to }}</span>
-                                        dari
-                                        <span class="font-medium">{{ attendances.total }}</span>
-                                        hasil
-                                    </p>
-                                </div>
-                                <div>
-                                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                                        <template v-for="(link, index) in attendances.links" :key="index">
-                                            <span v-if="link.url === null" 
-                                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 cursor-not-allowed">
-                                                {{ link.label }}
+                    </div>
+
+                    <!-- Izin Table -->
+                    <div v-if="activeTab === 'izin'" class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm">
+                                <thead class="bg-red-600 text-white text-left">
+                                    <tr>
+                                        <th class="px-6 py-3">Nama</th>
+                                        <th class="px-6 py-3">Role</th>
+                                        <th class="px-6 py-3">Tanggal Mulai</th>
+                                        <th class="px-6 py-3">Tanggal Selesai</th>
+                                        <th class="px-6 py-3">Jenis Izin</th>
+                                        <th class="px-6 py-3">Status</th>
+                                        <th class="px-6 py-3">Keterangan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="permission in permissions.data" :key="permission.id" class="border-b hover:bg-red-50">
+                                        <td class="px-6 py-3 font-medium text-gray-900">{{ permission.user.name }}</td>
+                                        <td class="px-6 py-3">
+                                            <span class="px-2 py-1 rounded-full text-xs font-medium" :class="getRoleClass(permission.user.role)">
+                                                {{ getRoleText(permission.user.role) }}
                                             </span>
-                                            <a v-else
-                                                :href="link.url"
-                                                @click.prevent="fetchPage(link.url)"
-                                                :class="link.active ? 'z-10 bg-red-50 border-red-500 text-red-600' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'"
-                                                class="relative inline-flex items-center px-4 py-2 border text-sm font-medium">
-                                                {{ link.label }}
-                                            </a>
-                                        </template>
-                                    </nav>
-                                </div>
+                                        </td>
+                                        <td class="px-6 py-3 text-gray-700">{{ formatDate(permission.tanggal_mulai) }}</td>
+                                        <td class="px-6 py-3 text-gray-700">{{ formatDate(permission.tanggal_selesai) }}</td>
+                                        <td class="px-6 py-3 text-gray-700">{{ permission.jenis_izin }}</td>
+                                        <td class="px-6 py-3">
+                                            <span
+                                                :class="getIzinStatusClass(permission.status)"
+                                                class="px-3 py-1 rounded-full text-xs font-semibold"
+                                            >
+                                                {{ permission.status }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-3 text-gray-700">
+                                            {{ permission.keterangan || '-' }}
+                                        </td>
+                                    </tr>
+                                    <tr v-if="permissions.data.length === 0">
+                                        <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
+                                            Tidak ada data izin
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Pagination (Shared) -->
+                    <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-b-xl shadow-md mt-[-1px]">
+                        <div class="flex-1 flex justify-between sm:hidden">
+                            <a :href="currentData.prev_page_url" 
+                               :class="currentData.prev_page_url ? 'relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50' : 'relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed'">
+                                Sebelumnya
+                            </a>
+                            <a :href="currentData.next_page_url" 
+                               :class="currentData.next_page_url ? 'ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50' : 'ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed'">
+                                Berikutnya
+                            </a>
+                        </div>
+                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <div>
+                                <p class="text-sm text-gray-700">
+                                    Menampilkan
+                                    <span class="font-medium">{{ currentData.from }}</span>
+                                    sampai
+                                    <span class="font-medium">{{ currentData.to }}</span>
+                                    dari
+                                    <span class="font-medium">{{ currentData.total }}</span>
+                                    hasil
+                                </p>
+                            </div>
+                            <div>
+                                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                    <template v-for="(link, index) in currentData.links" :key="index">
+                                        <span v-if="link.url === null" 
+                                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 cursor-not-allowed">
+                                            {{ link.label }}
+                                        </span>
+                                        <a v-else
+                                            :href="link.url"
+                                            @click.prevent="fetchPage(link.url)"
+                                            :class="link.active ? 'z-10 bg-red-50 border-red-500 text-red-600' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'"
+                                            class="relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                            {{ link.label }}
+                                        </a>
+                                    </template>
+                                </nav>
                             </div>
                         </div>
                     </div>
@@ -250,18 +327,22 @@ import {
     FilterIcon, 
     FileDownIcon, 
     FileSpreadsheetIcon, 
-    FileTextIcon 
+    FileTextIcon,
+    ClipboardListIcon,
+    CalendarIcon
 } from 'lucide-vue-next';
 
 // Props
 const props = defineProps({
     attendances: Object,
+    permissions: Object,
     filters: Object,
 });
 
 // Reactive data
 const page = usePage();
 const searchQuery = ref('');
+const activeTab = ref('presensi');
 const showFilter = ref(false);
 const showExportDropdown = ref(false);
 const filterButton = ref(null);
@@ -272,6 +353,10 @@ const sidebarCollapsed = ref(false);
 // Computed properties
 const isFilterActive = computed(() => {
     return props.filters?.start_date || props.filters?.end_date;
+});
+
+const currentData = computed(() => {
+    return activeTab.value === 'presensi' ? props.attendances : props.permissions;
 });
 
 // Methods
@@ -315,6 +400,19 @@ const getStatusClass = (attendance) => {
     }
 };
 
+const getIzinStatusClass = (status) => {
+    switch (status) {
+        case 'Disetujui':
+            return 'bg-green-100 text-green-800';
+        case 'Ditolak':
+            return 'bg-red-100 text-red-800';
+        case 'Diajukan':
+            return 'bg-yellow-100 text-yellow-800';
+        default:
+            return 'bg-gray-100 text-gray-800';
+    }
+};
+
 const handleSearch = () => {
     // Implement search functionality
     router.get('/superadmin/laporan', { search: searchQuery.value }, { 
@@ -343,24 +441,22 @@ const resetFilters = () => {
 };
 
 const exportToExcel = () => {
-    router.post('/superadmin/laporan/export/excel', {
-        start_date: props.filters.start_date,
-        end_date: props.filters.end_date,
-        search: searchQuery.value
-    }, {
-        preserveScroll: true
-    });
+    const params = new URLSearchParams();
+    if (props.filters.start_date) params.append('start_date', props.filters.start_date);
+    if (props.filters.end_date) params.append('end_date', props.filters.end_date);
+    if (searchQuery.value) params.append('search', searchQuery.value);
+    
+    window.location.href = `/superadmin/laporan/export/excel?${params.toString()}`;
     showExportDropdown.value = false;
 };
 
 const exportToPDF = () => {
-    router.post('/superadmin/laporan/export/pdf', {
-        start_date: props.filters.start_date,
-        end_date: props.filters.end_date,
-        search: searchQuery.value
-    }, {
-        preserveScroll: true
-    });
+    const params = new URLSearchParams();
+    if (props.filters.start_date) params.append('start_date', props.filters.start_date);
+    if (props.filters.end_date) params.append('end_date', props.filters.end_date);
+    if (searchQuery.value) params.append('search', searchQuery.value);
+    
+    window.location.href = `/superadmin/laporan/export/pdf?${params.toString()}`;
     showExportDropdown.value = false;
 };
 

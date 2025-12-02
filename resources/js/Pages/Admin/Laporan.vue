@@ -10,133 +10,155 @@
             </div>
 
             <!-- Page Title + Controls -->
-            <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <!-- Left: Title + Description -->
+            <div class="mb-6 flex flex-col gap-4">
+                <!-- Title + Description -->
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         <FileTextIcon class="text-red-600" />
-                        Laporan Presensi
+                        Laporan Global
                     </h1>
-                    <p class="text-gray-600 mt-2">Rekapitulasi presensi seluruh pegawai POLDA TIK.</p>
+                    <p class="text-gray-600 mt-2">Rekapitulasi presensi dan izin seluruh pegawai.</p>
                 </div>
 
-                <!-- Right: Search + Filter + Export -->
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <!-- Search Bar -->
-                    <div class="relative">
-                        <SearchIcon
-                            class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
-                        />
-                        <input
-                            v-model="filterForm.search"
-                            type="text"
-                            placeholder="Cari laporan..."
-                            class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full md:w-64"
-                            @input="handleSearch"
-                        />
-                    </div>
-
-                    <!-- Filter Button -->
-                    <div class="relative">
+                <!-- Tabs & Controls Toolbar -->
+                <div class="flex flex-col lg:flex-row justify-between items-end border-b border-gray-200 mb-6 gap-4">
+                    <!-- Tabs -->
+                    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
                         <button
-                            ref="filterButton"
-                            @click="showFilter = !showFilter"
-                            class="px-3 py-2 border rounded-lg flex items-center space-x-2"
-                            :class="isFilterActive ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:bg-gray-50'"
+                            @click="activeTab = 'presensi'"
+                            :class="[
+                                activeTab === 'presensi'
+                                    ? 'border-red-500 text-red-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                                'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2'
+                            ]"
                         >
-                            <FilterIcon class="h-5 w-5" :class="isFilterActive ? 'text-red-600' : 'text-gray-500'" />
-                            <span>Rentang Waktu</span>
+                            <ClipboardListIcon class="w-5 h-5" />
+                            Presensi
                         </button>
-
-                        <!-- Filter Popover -->
-                        <div 
-                            v-if="showFilter" 
-                            ref="filterPopover"
-                            class="absolute right-0 mt-2 bg-white shadow-lg rounded-xl border p-4 z-50 w-80 max-w-sm"
+                        <button
+                            @click="activeTab = 'izin'"
+                            :class="[
+                                activeTab === 'izin'
+                                    ? 'border-red-500 text-red-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                                'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2'
+                            ]"
                         >
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
-                                    <input
-                                        type="date"
-                                        v-model="filterForm.start_date"
-                                        class="w-full border border-gray-300 rounded-lg p-2"
-                                    />
+                            <CalendarIcon class="w-5 h-5" />
+                            Izin
+                        </button>
+                    </nav>
+
+                    <!-- Controls: Search + Filter + Export -->
+                    <div class="flex flex-col md:flex-row gap-3 w-full lg:w-auto pb-2">
+                        <!-- Search Bar -->
+                        <div class="relative w-full md:w-64">
+                            <SearchIcon
+                                class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
+                            />
+                            <input
+                                v-model="filterForm.search"
+                                type="text"
+                                placeholder="Cari laporan..."
+                                class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full text-sm"
+                                @input="handleSearch"
+                            />
+                        </div>
+
+                        <!-- Filter Button -->
+                        <div class="relative">
+                            <button
+                                ref="filterButton"
+                                @click="showFilter = !showFilter"
+                                class="px-3 py-2 border rounded-lg flex items-center space-x-2 w-full md:w-auto justify-center"
+                                :class="isFilterActive ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:bg-gray-50'"
+                            >
+                                <FilterIcon class="h-5 w-5" :class="isFilterActive ? 'text-red-600' : 'text-gray-500'" />
+                                <span class="text-sm">Filter</span>
+                            </button>
+
+                            <!-- Filter Popover -->
+                            <div 
+                                v-if="showFilter" 
+                                ref="filterPopover"
+                                class="absolute right-0 mt-2 bg-white shadow-lg rounded-xl border p-4 z-50 w-80 max-w-sm"
+                            >
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
+                                        <input
+                                            type="date"
+                                            v-model="filterForm.start_date"
+                                            class="w-full border border-gray-300 rounded-lg p-2"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir</label>
+                                        <input
+                                            type="date"
+                                            v-model="filterForm.end_date"
+                                            class="w-full border border-gray-300 rounded-lg p-2"
+                                        />
+                                    </div>
                                 </div>
-                                
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir</label>
-                                    <input
-                                        type="date"
-                                        v-model="filterForm.end_date"
-                                        class="w-full border border-gray-300 rounded-lg p-2"
-                                    />
+
+                                <div class="mt-6 flex justify-end gap-3">
+                                    <button
+                                        @click="resetFilters"
+                                        class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-all duration-200 text-sm"
+                                    >
+                                        Reset
+                                    </button>
+                                    <button
+                                        @click="applyFilters"
+                                        class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-all duration-200 text-sm"
+                                    >
+                                        Terapkan
+                                    </button>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="mt-6 flex justify-end gap-3">
+                        <!-- Export Dropdown -->
+                        <div class="relative">
+                            <button
+                                @click="showExportDropdown = !showExportDropdown"
+                                class="px-4 py-2 bg-[#C62828] text-white rounded-lg hover:bg-[#b71c1c] transition-all duration-300 flex items-center justify-center w-full md:w-auto"
+                                title="Export"
+                            >
+                                <FileDownIcon class="h-5 w-5" />
+                                <span class="md:hidden ml-2 text-sm">Export</span>
+                            </button>
+
+                            <!-- Export Dropdown Menu -->
+                            <div 
+                                v-if="showExportDropdown" 
+                                class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10"
+                            >
                                 <button
-                                    @click="resetFilters"
-                                    class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-all duration-200"
+                                    @click="exportToExcel"
+                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                 >
-                                    Reset
+                                    <FileSpreadsheetIcon class="h-4 w-4 mr-2" />
+                                    Export ke Excel
                                 </button>
                                 <button
-                                    @click="applyFilters"
-                                    class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-all duration-200"
+                                    @click="exportToPDF"
+                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                 >
-                                    Terapkan
+                                    <FileTextIcon class="h-4 w-4 mr-2" />
+                                    Export ke PDF
                                 </button>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Export Dropdown -->
-                    <div class="relative">
-                        <button
-                            @click="showExportDropdown = !showExportDropdown"
-                            class="px-4 py-2 bg-[#C62828] text-white rounded-lg hover:bg-[#b71c1c] transition-all duration-300 flex items-center justify-center"
-                            title="Export"
-                        >
-                            <FileDownIcon class="h-5 w-5" />
-                        </button>
-
-                        <!-- Export Dropdown Menu -->
-                        <div 
-                            v-if="showExportDropdown" 
-                            class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10"
-                        >
-                            <button
-                                @click="exportToExcel"
-                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                            >
-                                <FileSpreadsheetIcon class="h-4 w-4 mr-2" />
-                                Export ke Excel
-                            </button>
-                            <button
-                                @click="exportToPDF"
-                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                            >
-                                <FileTextIcon class="h-4 w-4 mr-2" />
-                                Export ke PDF
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Refresh Button -->
-                    <button
-                        @click="refreshData"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 flex items-center justify-center"
-                        title="Refresh Data"
-                        :disabled="isRefreshing"
-                    >
-                        <RefreshCwIcon class="h-5 w-5" :class="{ 'animate-spin': isRefreshing }" />
-                    </button>
                 </div>
             </div>
 
             <!-- Attendance Table -->
-            <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+            <div v-if="activeTab === 'presensi'" class="bg-white rounded-2xl shadow-md overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-[#ad1f32] border-b border-gray-400">
@@ -151,7 +173,7 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             <tr 
-                                v-for="attendance in attendancesData" 
+                                v-for="attendance in currentData.data" 
                                 :key="attendance.id" 
                                 class="hover:bg-gray-50 transition-all duration-300"
                             >
@@ -181,7 +203,7 @@
                                     {{ attendance.keterangan || '-' }}
                                 </td>
                             </tr>
-                            <tr v-if="!attendancesData || attendancesData.length === 0">
+                            <tr v-if="!currentData.data || currentData.data.length === 0">
                                 <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
                                     Tidak ada data presensi
                                 </td>
@@ -189,60 +211,136 @@
                         </tbody>
                     </table>
                 </div>
-                
-                <!-- Pagination -->
-                <div v-if="attendances && attendances.links" class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                    <div class="flex-1 flex justify-between sm:hidden">
-                        <button 
-                            @click="fetchPage(attendances.prev_page_url)" 
-                            :disabled="!attendances.prev_page_url"
-                            :class="attendances.prev_page_url ? 'relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50' : 'relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed'">
-                            Sebelumnya
-                        </button>
-                        <button 
-                            @click="fetchPage(attendances.next_page_url)" 
-                            :disabled="!attendances.next_page_url"
-                            :class="attendances.next_page_url ? 'ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50' : 'ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed'">
-                            Berikutnya
-                        </button>
-                    </div>
-                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                        <div>
-                            <p class="text-sm text-gray-700">
-                                Menampilkan
-                                <span class="font-medium">{{ attendances.from || 0 }}</span>
-                                sampai
-                                <span class="font-medium">{{ attendances.to || 0 }}</span>
-                                dari
-                                <span class="font-medium">{{ attendances.total }}</span>
-                                hasil
-                            </p>
-                        </div>
-                        <div>
-                            <nav class="relative z-0 inline-flex rounded-lg shadow-sm -space-x-px" aria-label="Pagination">
-                                <template v-for="(link, index) in attendances.links" :key="index">
-                                    <span v-if="link.url === null" 
-                                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 cursor-not-allowed rounded-lg">
-                                        {{ link.label }}
+            </div>
+
+            <!-- Izin Table -->
+            <div v-if="activeTab === 'izin'" class="bg-white rounded-2xl shadow-md overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-[#ad1f32] border-b border-gray-400">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Nama</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Tanggal Mulai</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Tanggal Selesai</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Jenis Izin</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Dokumen</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Keterangan</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr 
+                                v-for="permission in currentData.data" 
+                                :key="permission.id" 
+                                class="hover:bg-gray-50 transition-all duration-300"
+                            >
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ permission.user?.name || '-' }}</div>
+                                    <div class="text-sm text-gray-500">{{ permission.user?.email || '' }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ formatDate(permission.tanggal_mulai) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ formatDate(permission.tanggal_selesai) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 capitalize">{{ permission.jenis_izin }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span
+                                        :class="getIzinStatusClass(permission.status)"
+                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                    >
+                                        {{ permission.status }}
                                     </span>
-                                    <button v-else-if="link.label === 'pagination.previous' || link.label.includes('Previous') || link.label.includes('&laquo;')" 
-                                       @click="fetchPage(link.url)"
-                                       class="relative inline-flex items-center px-2 py-2 rounded-l-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-100 rounded-lg">
-                                        <ChevronLeftIcon class="h-5 w-5" />
-                                    </button>
-                                    <button v-else-if="link.label === 'pagination.next' || link.label.includes('Next') || link.label.includes('&raquo;')" 
-                                       @click="fetchPage(link.url)"
-                                       class="relative inline-flex items-center px-2 py-2 rounded-r-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-100 rounded-lg">
-                                        <ChevronRightIcon class="h-5 w-5" />
-                                    </button>
-                                    <button v-else 
-                                       @click="fetchPage(link.url)"
-                                       :class="link.active ? 'z-10 bg-red-600 text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-lg' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-100 relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-lg'">
-                                        {{ link.label }}
-                                    </button>
-                                </template>
-                            </nav>
-                        </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <a
+                                        v-if="permission.file_path"
+                                        :href="route('admin.izin.download', permission.id)"
+                                        target="_blank"
+                                        class="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                                        title="Unduh Dokumen"
+                                    >
+                                        <DownloadIcon class="w-5 h-5" />
+                                    </a>
+                                    <span v-else class="text-gray-400 text-sm">-</span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-700 max-w-xs truncate" :title="permission.keterangan">
+                                    {{ permission.keterangan || '-' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex space-x-2" v-if="permission.status === 'pending' || permission.status === 'Diajukan'">
+                                        <button @click="updateStatus(permission.id, 'approved')" class="text-green-600 hover:text-green-900" title="Setujui">
+                                            <CheckCircleIcon class="w-5 h-5" />
+                                        </button>
+                                        <button @click="updateStatus(permission.id, 'rejected')" class="text-red-600 hover:text-red-900" title="Tolak">
+                                            <XCircleIcon class="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                    <span v-else class="text-gray-400 text-xs italic">
+                                        {{ permission.status === 'approved' || permission.status === 'Disetujui' ? 'Disetujui' : 'Ditolak' }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr v-if="!currentData.data || currentData.data.length === 0">
+                                <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">
+                                    Tidak ada data izin
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Pagination (Shared) -->
+            <div v-if="currentData && currentData.links" class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-b-2xl shadow-md mt-0">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    <button 
+                        @click="fetchPage(currentData.prev_page_url)" 
+                        :disabled="!currentData.prev_page_url"
+                        :class="currentData.prev_page_url ? 'relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50' : 'relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed'">
+                        Sebelumnya
+                    </button>
+                    <button 
+                        @click="fetchPage(currentData.next_page_url)" 
+                        :disabled="!currentData.next_page_url"
+                        :class="currentData.next_page_url ? 'ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50' : 'ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed'">
+                        Berikutnya
+                    </button>
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Menampilkan
+                            <span class="font-medium">{{ currentData.from || 0 }}</span>
+                            sampai
+                            <span class="font-medium">{{ currentData.to || 0 }}</span>
+                            dari
+                            <span class="font-medium">{{ currentData.total }}</span>
+                            hasil
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-lg shadow-sm -space-x-px" aria-label="Pagination">
+                            <template v-for="(link, index) in currentData.links" :key="index">
+                                <span v-if="link.url === null" 
+                                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 cursor-not-allowed rounded-lg">
+                                    {{ link.label }}
+                                </span>
+                                <button v-else-if="link.label === 'pagination.previous' || link.label.includes('Previous') || link.label.includes('&laquo;')" 
+                                   @click="fetchPage(link.url)"
+                                   class="relative inline-flex items-center px-2 py-2 rounded-l-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-100 rounded-lg">
+                                    <ChevronLeftIcon class="h-5 w-5" />
+                                </button>
+                                <button v-else-if="link.label === 'pagination.next' || link.label.includes('Next') || link.label.includes('&raquo;')" 
+                                   @click="fetchPage(link.url)"
+                                   class="relative inline-flex items-center px-2 py-2 rounded-r-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-100 rounded-lg">
+                                    <ChevronRightIcon class="h-5 w-5" />
+                                </button>
+                                <button v-else 
+                                   @click="fetchPage(link.url)"
+                                   :class="link.active ? 'z-10 bg-red-600 text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-lg' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-100 relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-lg'">
+                                    {{ link.label }}
+                                </button>
+                            </template>
+                        </nav>
                     </div>
                 </div>
             </div>
@@ -263,12 +361,18 @@ import {
     FileTextIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
-    RefreshCwIcon
+    RefreshCwIcon,
+    ClipboardListIcon,
+    CalendarIcon,
+    DownloadIcon,
+    CheckCircleIcon,
+    XCircleIcon
 } from 'lucide-vue-next';
 
 // Props
 const props = defineProps({
     attendances: Object,
+    permissions: Object,
     filters: Object,
 });
 
@@ -278,6 +382,7 @@ const showExportDropdown = ref(false);
 const filterButton = ref(null);
 const filterPopover = ref(null);
 const isRefreshing = ref(false);
+const activeTab = ref('presensi');
 
 const filterForm = useForm({
     start_date: props.filters?.start_date || '',
@@ -286,8 +391,8 @@ const filterForm = useForm({
 });
 
 // Computed properties
-const attendancesData = computed(() => {
-    return props.attendances?.data || props.attendances || [];
+const currentData = computed(() => {
+    return activeTab.value === 'presensi' ? props.attendances : props.permissions;
 });
 
 const isFilterActive = computed(() => {
@@ -328,6 +433,22 @@ const getStatusClass = (attendance) => {
         return 'bg-red-100 text-red-800';
     } else {
         return 'bg-gray-100 text-gray-800';
+    }
+};
+
+const getIzinStatusClass = (status) => {
+    switch (status) {
+        case 'Disetujui':
+        case 'approved':
+            return 'bg-green-100 text-green-800';
+        case 'Ditolak':
+        case 'rejected':
+            return 'bg-red-100 text-red-800';
+        case 'Diajukan':
+        case 'pending':
+            return 'bg-yellow-100 text-yellow-800';
+        default:
+            return 'bg-gray-100 text-gray-800';
     }
 };
 
@@ -381,12 +502,6 @@ const resetFilters = () => {
 };
 
 const exportToExcel = () => {
-    // Use window.location.href to trigger download directly, or form submission
-    // Inertia router.post might expect a JSON response, but export returns a file.
-    // Better to use window.open or a hidden form for file downloads if not using Inertia's way properly.
-    // However, if the backend returns a download response, Inertia can handle it if configured, 
-    // but often it's easier to just construct the URL.
-    
     const params = new URLSearchParams({
         format: 'excel',
         start_date: filterForm.start_date,
@@ -418,12 +533,25 @@ const fetchPage = (url) => {
 const refreshData = () => {
     isRefreshing.value = true;
     router.reload({
-        only: ['attendances'],
+        only: ['attendances', 'permissions'],
         preserveScroll: true,
         onFinish: () => {
             isRefreshing.value = false;
         }
     });
+};
+
+const updateStatus = (id, status) => {
+    if (confirm(`Apakah Anda yakin ingin ${status === 'approved' ? 'menyetujui' : 'menolak'} izin ini?`)) {
+        router.patch(route('admin.izin.update', id), {
+            status: status
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                // Optional: Show success message
+            }
+        });
+    }
 };
 
 // Click outside handler for filter popover

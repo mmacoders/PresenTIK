@@ -5,6 +5,7 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\Absensi;
 
+use App\Models\Izin;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use PDF;
@@ -31,10 +32,30 @@ class LaporanController extends Controller
         }
         
         // Paginate results
-        $attendances = $attendancesQuery->paginate(10)->withQueryString();
+        $attendances = $attendancesQuery->paginate(10, ['*'], 'attendances_page')->withQueryString();
+
+        // Build query for permissions
+        $permissionsQuery = Izin::with(['user'])->orderBy('created_at', 'desc');
+
+        if ($request->search) {
+            $permissionsQuery->whereHas('user', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->start_date) {
+            $permissionsQuery->where('tanggal_mulai', '>=', $request->start_date);
+        }
+
+        if ($request->end_date) {
+            $permissionsQuery->where('tanggal_selesai', '<=', $request->end_date);
+        }
+
+        $permissions = $permissionsQuery->paginate(10, ['*'], 'permissions_page')->withQueryString();
         
         return Inertia::render('SuperAdmin/LaporanGlobal', [
             'attendances' => $attendances,
+            'permissions' => $permissions,
             'filters' => $request->only(['search', 'start_date', 'end_date']),
         ]);
     }

@@ -137,15 +137,9 @@ const menuItems = [
     component: 'a'
   },
   {
-    name: 'Laporan Presensi',
+    name: 'Laporan Global',
     href: '/admin/laporan',
     icon: BarChart3Icon,
-    component: 'a'
-  },
-  {
-    name: 'Izin & Cuti',
-    href: '/admin/izin',
-    icon: ClipboardListIcon,
     component: 'a'
   },
   {
