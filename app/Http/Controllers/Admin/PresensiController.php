@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Absensi;
 use App\Models\SystemSetting;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -76,6 +77,21 @@ class PresensiController extends Controller
             return back()->with('error', 'Belum waktunya presensi. Presensi dimulai pukul ' . substr($presensiStartTime, 0, 5));
         }
         
+        // Determine status based on time
+        $jamMasuk = $settings->jam_masuk ?? '08:00:00';
+        $gracePeriodMinutes = $settings->grace_period_minutes ?? 10;
+        
+        // Calculate grace period end time
+        $gracePeriodEnd = Carbon::parse($jamMasuk)->addMinutes($gracePeriodMinutes)->format('H:i:s');
+        
+        $status = 'Hadir';
+        if ($currentTime > $gracePeriodEnd) {
+            $status = 'Terlambat';
+            $request->validate([
+                'keterangan' => 'required|string|max:255',
+            ]);
+        }
+
         // Create attendance record
         Absensi::create([
             'user_id' => $user->id,
@@ -84,10 +100,47 @@ class PresensiController extends Controller
             'lat_masuk' => $request->lat ?? 0,
             'lng_masuk' => $request->lng ?? 0,
             'status_lokasi_masuk' => $locationValidationDisabled ? 'valid' : 'valid', // Always valid if disabled or passed validation
-            'status' => 'Hadir',
+            'status' => $status,
+            'keterangan' => $request->keterangan,
         ]);
         
         return back()->with('success', 'Presensi berhasil dicatat');
+    }
+
+    // Request permission for admin
+    public function requestPermission(Request $request)
+    {
+        $user = auth()->user();
+        
+        $request->validate([
+            'jenis_izin' => 'required|in:penuh',
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+            'keterangan' => 'required|string|max:500',
+            'file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+        ]);
+        
+        // Handle file upload
+        $filePath = null;
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $fileName = time() . '_' . $user->id . '_' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('izin_files', $fileName, 'public');
+        }
+        
+        \App\Models\Izin::create([
+            'user_id' => $user->id,
+            'tanggal' => $request->tanggal_mulai,
+            'tanggal_mulai' => $request->tanggal_mulai,
+            'tanggal_selesai' => $request->tanggal_selesai,
+            'jenis_izin' => $request->jenis_izin,
+            'keterangan' => $request->keterangan,
+            'disetujui_oleh' => null,
+            'status' => 'pending',
+            'file_path' => $filePath,
+        ]);
+        
+        return back()->with('success', 'Permintaan izin berhasil diajukan.');
     }
 
     // Validate user location against office location

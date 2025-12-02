@@ -84,12 +84,14 @@
               </div>
 
               <!-- Add Button -->
+              <!-- Add Button (Only for Admin tab) -->
               <button
+                v-if="activeTab === 'admin'"
                 @click="openCreateModal"
                 class="px-4 py-2 bg-[#C62828] text-white rounded-lg hover:bg-[#b71c1c] transition-all duration-300 flex items-center justify-center gap-2 text-sm whitespace-nowrap"
               >
                 <PlusCircleIcon class="h-5 w-5" />
-                {{ activeTab === 'pegawai' ? 'Tambah Pegawai' : 'Tambah Admin' }}
+                Tambah Admin
               </button>
             </div>
           </div>
@@ -259,10 +261,11 @@
 
       <!-- Modals -->
       <!-- Create/Edit User Modal (Pegawai) -->
+      <!-- Edit User Modal (Pegawai) - Create removed as per request -->
       <Modal :show="showUserModal" @close="closeModal">
         <div class="p-6">
           <h3 class="text-lg font-medium text-gray-900 mb-4">
-            {{ editingUser ? 'Edit Pegawai' : 'Tambah Pegawai' }}
+            Edit Pegawai
           </h3>
           <form @submit.prevent="submitUserForm" class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -318,7 +321,7 @@
             </div>
             <div class="flex justify-end gap-4">
               <SecondaryButton @click="closeModal">Batal</SecondaryButton>
-              <PrimaryButton :disabled="userForm.processing">{{ editingUser ? 'Update' : 'Simpan' }}</PrimaryButton>
+              <PrimaryButton :disabled="userForm.processing">Update</PrimaryButton>
             </div>
           </form>
         </div>
@@ -547,11 +550,8 @@ const fetchPage = (url) => {
 };
 
 const openCreateModal = () => {
-    if (activeTab.value === 'pegawai') {
-        editingUser.value = null;
-        userForm.reset();
-        showUserModal.value = true;
-    } else {
+    // Only allow creating admins
+    if (activeTab.value === 'admin') {
         editingAdmin.value = null;
         adminForm.reset();
         showAdminModal.value = true;
@@ -586,10 +586,6 @@ const editUser = (user) => {
 const submitUserForm = () => {
     if (editingUser.value) {
         userForm.patch(route('superadmin.pegawai.update', editingUser.value.id), {
-            onSuccess: () => closeModal(),
-        });
-    } else {
-        userForm.post(route('superadmin.pegawai.store'), {
             onSuccess: () => closeModal(),
         });
     }

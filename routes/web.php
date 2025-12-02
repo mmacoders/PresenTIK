@@ -60,6 +60,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     // Presensi routes
     Route::get('/admin/presensi', [AdminPresensiController::class, 'index'])->name('admin.presensi');
     Route::post('/admin/presensi/checkin', [AdminPresensiController::class, 'checkin'])->name('admin.presensi.checkin');
+    Route::post('/admin/presensi/permission', [AdminPresensiController::class, 'requestPermission'])->name('admin.presensi.permission');
 });
 
 // SuperAdmin routes
@@ -104,6 +105,7 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
     // Presensi routes
     Route::get('/superadmin/presensi', [SuperAdminPresensiController::class, 'index'])->name('superadmin.presensi');
     Route::post('/superadmin/presensi/checkin', [SuperAdminPresensiController::class, 'checkin'])->name('superadmin.presensi.checkin');
+    Route::post('/superadmin/presensi/permission', [SuperAdminPresensiController::class, 'requestPermission'])->name('superadmin.presensi.permission');
 });
 
 // API routes for system settings - accessible by users for testing

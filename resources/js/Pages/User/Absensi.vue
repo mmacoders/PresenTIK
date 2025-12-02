@@ -503,6 +503,17 @@ const isValidCheckInTime = computed(() => {
   return currentTime <= cutoffTime;
 });
 
+// Check if current time is before start time
+const isBeforeStartTime = computed(() => {
+  if (!props.systemSettings) return false;
+  
+  const now = new Date();
+  const currentTime = now.toTimeString().substring(0, 8); // HH:MM:SS format
+  const startTime = props.systemSettings?.presensi_start_time || '06:00:00';
+  
+  return currentTime < startTime;
+});
+
 const getAttendanceButtonText = computed(() => {
   return 'Check-in';
 });
@@ -703,6 +714,17 @@ const checkIn = () => {
     });
     return;
   }
+
+  // Check if user is trying to check in before start time
+  if (isBeforeStartTime.value) {
+    const startTime = props.systemSettings?.presensi_start_time || '06:00:00';
+    Swal.fire({
+      icon: 'warning',
+      title: 'Belum Waktunya!',
+      text: `Presensi dimulai pukul ${startTime.substring(0, 5)}.`,
+    });
+    return;
+  }
   
   // Check if user is trying to check in after cutoff time
   if (!isValidCheckInTime.value) {
@@ -787,8 +809,8 @@ const sendCheckInRequest = (lat, lng) => {
       lateArrivalReason.value = ''; // Clear the late arrival reason after submission
     },
     onSuccess: () => {
-      // Reload the page to update the attendance status
-      router.reload();
+      // Page props are automatically updated by Inertia
+      // No need to reload manually as it might clear flash messages
     },
     onError: (errors) => {
       Swal.fire({
