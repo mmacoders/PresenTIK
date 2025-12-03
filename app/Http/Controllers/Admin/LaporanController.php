@@ -8,7 +8,11 @@ use App\Models\Absensi;
 use App\Models\Izin;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\LaporanExport;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class LaporanController extends Controller
 {
@@ -73,9 +77,12 @@ class LaporanController extends Controller
         $admin = auth()->user();
         
         // Get date range
-        $startDate = $request->start_date;
-        $endDate = $request->end_date;
+        // Get date range with defaults
+        $now = Carbon::now();
+        $startDate = $request->start_date ?: $now->copy()->startOfMonth()->format('Y-m-d');
+        $endDate = $request->end_date ?: $now->copy()->endOfMonth()->format('Y-m-d');
         $search = $request->search;
+        $format = $request->format;
         
         // Get attendance records for export (all roles)
         $attendancesQuery = Absensi::whereBetween('tanggal', [$startDate, $endDate])
@@ -90,6 +97,19 @@ class LaporanController extends Controller
         }
         
         $attendances = $attendancesQuery->get();
+        
+        if ($format === 'excel') {
+            return Excel::download(new LaporanExport($attendances), 'laporan-absensi.xlsx');
+        }
+
+        if ($format === 'pdf') {
+            $pdf = Pdf::loadView('pdf.laporan_absensi', [
+                'attendances' => $attendances,
+                'startDate' => $startDate,
+                'endDate' => $endDate
+            ]);
+            return $pdf->download('laporan-absensi.pdf');
+        }
         
         // Create CSV content with Role column
         $csvData = "Nama,Role,Tanggal,Masuk,Keluar,Status,Keterangan\n";

@@ -41,7 +41,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::patch('/admin/pegawai/{user}/toggle-status', [AdminPegawaiController::class, 'toggleStatus'])->name('admin.pegawai.toggle-status');
     Route::patch('/admin/pegawai/{user}/reset-password', [AdminPegawaiController::class, 'resetPassword'])->name('admin.pegawai.reset-password');
     Route::get('/admin/laporan', [AdminLaporanController::class, 'index'])->name('admin.laporan');
-    Route::post('/admin/laporan/export', [AdminLaporanController::class, 'export'])->name('admin.laporan.export');
+    Route::get('/admin/laporan/export', [AdminLaporanController::class, 'export'])->name('admin.laporan.export');
     // Izin & Cuti routes
     Route::get('/admin/izin', [App\Http\Controllers\Admin\IzinController::class, 'index'])->name('admin.izin');
     Route::get('/admin/izin/create', [App\Http\Controllers\Admin\IzinController::class, 'create'])->name('admin.izin.create');

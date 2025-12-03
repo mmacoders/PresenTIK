@@ -269,6 +269,24 @@
           </div>
           
           <div>
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="permission_category">
+              Kategori Izin
+            </label>
+            <select
+              id="permission_category"
+              v-model="permissionCategory"
+              class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-[#dc2626] focus:border-[#dc2626] transition-colors duration-200 shadow-sm"
+              required
+            >
+              <option value="" disabled>Pilih Kategori</option>
+              <option value="Izin">Izin</option>
+              <option value="Sakit">Sakit</option>
+              <option value="Cuti">Cuti</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+          
+          <div>
             <label class="block text-gray-700 text-sm font-bold mb-2" for="permission_reason">
               Keterangan Izin
             </label>
@@ -388,6 +406,7 @@ const lateArrivalReason = ref('');
 const permissionReason = ref('');
 const permissionStartDate = ref(new Date().toISOString().split('T')[0]);
 const permissionEndDate = ref(new Date().toISOString().split('T')[0]);
+const permissionCategory = ref('');
 const permissionFile = ref(null);
 const submittingPermission = ref(false);
 
@@ -860,7 +879,8 @@ const submitPermissionRequest = () => {
   
   const formData = new FormData();
   formData.append('keterangan', permissionReason.value);
-  formData.append('jenis_izin', 'penuh'); // Default to 'penuh' since we're removing the selection
+  formData.append('jenis_izin', 'penuh'); // Default to 'penuh'
+  formData.append('catatan', permissionCategory.value); // Send category as catatan
   formData.append('tanggal_mulai', permissionStartDate.value);
   formData.append('tanggal_selesai', permissionEndDate.value);
   
@@ -874,6 +894,7 @@ const submitPermissionRequest = () => {
       submittingPermission.value = false;
       showPermissionModal.value = false;
       permissionReason.value = '';
+      permissionCategory.value = '';
       permissionStartDate.value = new Date().toISOString().split('T')[0];
       permissionEndDate.value = new Date().toISOString().split('T')[0];
       permissionFile.value = null;

@@ -9,6 +9,10 @@ use App\Models\Izin;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use PDF;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\LaporanExport;
+use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf as DomPdf;
 
 class LaporanController extends Controller
 {
@@ -71,34 +75,17 @@ class LaporanController extends Controller
             });
         }
 
-        if ($request->start_date) {
-            $attendancesQuery->where('tanggal', '>=', $request->start_date);
-        }
-        
-        if ($request->end_date) {
-            $attendancesQuery->where('tanggal', '<=', $request->end_date);
-        }
+        // Default date range if not provided
+        $now = Carbon::now();
+        $startDate = $request->start_date ?: $now->copy()->startOfMonth()->format('Y-m-d');
+        $endDate = $request->end_date ?: $now->copy()->endOfMonth()->format('Y-m-d');
+
+        $attendancesQuery->whereBetween('tanggal', [$startDate, $endDate]);
         
         // Get all results
         $attendances = $attendancesQuery->get();
         
-        // Create CSV content
-        $csvData = "Nama,Role,Tanggal,Masuk,Keluar,Status,Keterangan\n";
-        
-        foreach ($attendances as $attendance) {
-            $csvData .= '"' . $attendance->user->name . '",';
-            $csvData .= '"' . ucfirst($attendance->user->role) . '",';
-            $csvData .= '"' . $attendance->tanggal . '",';
-            $csvData .= '"' . ($attendance->waktu_masuk ?? '-') . '",';
-            $csvData .= '"' . ($attendance->waktu_keluar ?? '-') . '",';
-            $csvData .= '"' . $this->getStatusText($attendance) . '",';
-            $csvData .= '"' . ($attendance->keterangan ?? '-') . '"' . "\n";
-        }
-        
-        // Return CSV download
-        return response($csvData)
-            ->header('Content-Type', 'text/csv')
-            ->header('Content-Disposition', 'attachment; filename="laporan-absensi.csv"');
+        return Excel::download(new LaporanExport($attendances), 'laporan-absensi.xlsx');
     }
     
     public function exportPDF(Request $request)
@@ -123,26 +110,17 @@ class LaporanController extends Controller
         // Get all results
         $attendances = $attendancesQuery->get();
         
-        // For now, we'll return a simple PDF response
-        // In a real application, you would use a PDF library like DomPDF or TCPDF
-        $pdfContent = "Laporan Absensi\n\n";
-        $pdfContent .= "Tanggal: " . date('d/m/Y H:i:s') . "\n\n";
-        $pdfContent .= "Nama\tRole\tTanggal\tMasuk\tKeluar\tStatus\tKeterangan\n";
-        
-        foreach ($attendances as $attendance) {
-            $pdfContent .= $attendance->user->name . "\t";
-            $pdfContent .= ucfirst($attendance->user->role) . "\t";
-            $pdfContent .= $attendance->tanggal . "\t";
-            $pdfContent .= ($attendance->waktu_masuk ?? '-') . "\t";
-            $pdfContent .= ($attendance->waktu_keluar ?? '-') . "\t";
-            $pdfContent .= $this->getStatusText($attendance) . "\t";
-            $pdfContent .= ($attendance->keterangan ?? '-') . "\n";
-        }
-        
-        // Return PDF download
-        return response($pdfContent)
-            ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="laporan-absensi.pdf"');
+        // Default date range if not provided
+        $now = Carbon::now();
+        $startDate = $request->start_date ?: $now->copy()->startOfMonth()->format('Y-m-d');
+        $endDate = $request->end_date ?: $now->copy()->endOfMonth()->format('Y-m-d');
+
+        $pdf = DomPdf::loadView('pdf.laporan_absensi', [
+            'attendances' => $attendances,
+            'startDate' => $startDate,
+            'endDate' => $endDate
+        ]);
+        return $pdf->download('laporan-absensi.pdf');
     }
     
     // Helper function to get status text

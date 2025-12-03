@@ -117,6 +117,7 @@ class PresensiController extends Controller
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'keterangan' => 'required|string|max:500',
+            'catatan' => 'required|string|in:Izin,Sakit,Cuti,Lainnya',
             'file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
         
@@ -137,6 +138,7 @@ class PresensiController extends Controller
             'keterangan' => $request->keterangan,
             'disetujui_oleh' => null,
             'status' => 'pending',
+            'catatan' => $request->catatan,
             'file_path' => $filePath,
         ]);
         

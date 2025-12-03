@@ -460,7 +460,7 @@ const getRoleText = (role) => {
         case 'admin':
             return 'Admin';
         case 'user':
-            return 'Pegawai';
+            return 'User';
         default:
             return role;
     }
