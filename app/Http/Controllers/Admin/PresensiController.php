@@ -29,8 +29,15 @@ class PresensiController extends Controller
         // Get system settings
         $systemSettings = SystemSetting::first();
         
+        // Get today's leave
+        $todayIzin = \App\Models\Izin::where('user_id', $user->id)
+            ->where('tanggal_mulai', '<=', today())
+            ->where('tanggal_selesai', '>=', today())
+            ->first();
+        
         return Inertia::render('Admin/Presensi', [
             'todayAttendance' => $todayAttendance,
+            'todayIzin' => $todayIzin,
             'recentAttendance' => $recentAttendance,
             'systemSettings' => $systemSettings,
         ]);

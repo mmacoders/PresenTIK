@@ -82,18 +82,7 @@
                                 >
                                 <div v-if="profileForm.errors.name" class="text-red-500 text-xs mt-1">{{ profileForm.errors.name }}</div>
                             </div>
-                            
-                            <div>
-                                <label class="text-sm font-semibold text-gray-700 block mb-2">NIP / NRP</label>
-                                <input
-                                    type="text"
-                                    :value="profileForm.nip || profileForm.nrp"
-                                    disabled
-                                    class="w-full border border-gray-200 rounded-lg px-4 py-2.5 bg-gray-50 text-gray-500 cursor-not-allowed"
-                                >
-                            </div>
 
-                            <!-- Row 2 -->
                             <div>
                                 <label class="text-sm font-semibold text-gray-700 block mb-2">Email</label>
                                 <input
@@ -104,19 +93,42 @@
                                 >
                                 <div v-if="profileForm.errors.email" class="text-red-500 text-xs mt-1">{{ profileForm.errors.email }}</div>
                             </div>
-
+                            
+                            <!-- Row 2 -->
                             <div>
-                                <label class="text-sm font-semibold text-gray-700 block mb-2">No. HP</label>
+                                <label class="text-sm font-semibold text-gray-700 block mb-2">NRP</label>
                                 <input
                                     type="text"
-                                    v-model="profileForm.no_hp"
+                                    v-model="profileForm.nrp"
                                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-[#dc2626] focus:border-[#dc2626] focus:outline-none transition-all"
-                                    :class="{ 'border-red-500': profileForm.errors.no_hp }"
+                                    :class="{ 'border-red-500': profileForm.errors.nrp }"
                                 >
-                                <div v-if="profileForm.errors.no_hp" class="text-red-500 text-xs mt-1">{{ profileForm.errors.no_hp }}</div>
+                                <div v-if="profileForm.errors.nrp" class="text-red-500 text-xs mt-1">{{ profileForm.errors.nrp }}</div>
+                            </div>
+
+                            <div>
+                                <label class="text-sm font-semibold text-gray-700 block mb-2">NIP</label>
+                                <input
+                                    type="text"
+                                    v-model="profileForm.nip"
+                                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-[#dc2626] focus:border-[#dc2626] focus:outline-none transition-all"
+                                    :class="{ 'border-red-500': profileForm.errors.nip }"
+                                >
+                                <div v-if="profileForm.errors.nip" class="text-red-500 text-xs mt-1">{{ profileForm.errors.nip }}</div>
                             </div>
 
                             <!-- Row 3 -->
+                            <div>
+                                <label class="text-sm font-semibold text-gray-700 block mb-2">Pangkat</label>
+                                <input
+                                    type="text"
+                                    v-model="profileForm.pangkat"
+                                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-[#dc2626] focus:border-[#dc2626] focus:outline-none transition-all"
+                                    :class="{ 'border-red-500': profileForm.errors.pangkat }"
+                                >
+                                <div v-if="profileForm.errors.pangkat" class="text-red-500 text-xs mt-1">{{ profileForm.errors.pangkat }}</div>
+                            </div>
+
                             <div>
                                 <label class="text-sm font-semibold text-gray-700 block mb-2">Jabatan</label>
                                 <input
@@ -126,6 +138,18 @@
                                     :class="{ 'border-red-500': profileForm.errors.jabatan }"
                                 >
                                 <div v-if="profileForm.errors.jabatan" class="text-red-500 text-xs mt-1">{{ profileForm.errors.jabatan }}</div>
+                            </div>
+
+                            <!-- Row 4 -->
+                            <div>
+                                <label class="text-sm font-semibold text-gray-700 block mb-2">No. HP</label>
+                                <input
+                                    type="text"
+                                    v-model="profileForm.no_hp"
+                                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-[#dc2626] focus:border-[#dc2626] focus:outline-none transition-all"
+                                    :class="{ 'border-red-500': profileForm.errors.no_hp }"
+                                >
+                                <div v-if="profileForm.errors.no_hp" class="text-red-500 text-xs mt-1">{{ profileForm.errors.no_hp }}</div>
                             </div>
 
                             <div>
@@ -140,7 +164,7 @@
                                 <div v-if="profileForm.errors.password" class="text-red-500 text-xs mt-1">{{ profileForm.errors.password }}</div>
                             </div>
 
-                            <!-- Row 4 -->
+                            <!-- Row 5 -->
                             <div class="md:col-span-2">
                                 <label class="text-sm font-semibold text-gray-700 block mb-2">Konfirmasi Password</label>
                                 <input

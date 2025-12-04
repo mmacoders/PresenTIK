@@ -45,51 +45,27 @@ class LaporanExport implements FromCollection, WithHeadings, WithMapping, WithEv
         ];
     }
 
-    public function map($attendance): array
+    public function map($row): array
     {
         $this->rowNumber++;
         
-        $user = $attendance->user;
+        $user = $row->user;
         
         return [
             $this->rowNumber,
             $user->name ?? '-',
             ($user->pangkat ?? '-') . ' / ' . ($user->nrp ?? '-'),
             $user->jabatan ?? '-',
-            $attendance->waktu_masuk ?? '-',
-            $this->getStatusText($attendance),
-            $attendance->keterangan ?? '-',
+            $row->waktu_masuk ?? '-',
+            $row->status, // Status is already processed in Controller
+            $row->keterangan ?? '-',
         ];
     }
 
-    private function getStatusText($attendance)
+    // getStatusText is no longer needed as status is pre-processed, but keeping it empty or removing usage
+    private function getStatusText($row)
     {
-        switch ($attendance->status) {
-            case 'izin':
-            case 'Izin':
-            case 'Izin (Valid)':
-                return 'Izin';
-            case 'sakit':
-                return 'Sakit';
-            case 'terlambat':
-            case 'Terlambat':
-                return 'Terlambat';
-            case 'hadir':
-            case 'Hadir':
-                return $attendance->waktu_masuk ? 'Hadir' : 'Belum Absen';
-            case 'Izin Parsial (Check-in)':
-                return 'Izin Parsial (Check-in)';
-            case 'Izin Parsial (Selesai)':
-                return 'Izin Parsial (Selesai)';
-            default:
-                if ($attendance->waktu_masuk && $attendance->waktu_keluar) {
-                    return 'Hadir';
-                } else if ($attendance->waktu_masuk) {
-                    return 'Sudah Check-in';
-                } else {
-                    return $attendance->status ?: 'Belum Absen';
-                }
-        }
+        return $row->status;
     }
 
     public function registerEvents(): array
@@ -101,13 +77,14 @@ class LaporanExport implements FromCollection, WithHeadings, WithMapping, WithEv
                 
                 // Merge title
                 $sheet->mergeCells('A1:G1');
-                $sheet->setCellValue('A1', 'LAPORAN PRESENSI PERSONEL');
+                $sheet->setCellValue('A1', "KEPOLISIAN NEGARA REPUBLIK INDONESIA DAERAH GORONTALO\nBIDANG TEKNOLOGI INFORMASI DAN KOMUNIKASI\nABSEN APEL PAGI / SIANG PERSONIL POLRI / PNS");
+                $sheet->getStyle('A1')->getAlignment()->setWrapText(true);
                 
                 // Style Title
                 $sheet->getStyle('A1')->applyFromArray([
                     'font' => [
                         'bold' => true, 
-                        'size' => 14,
+                        'size' => 12,
                         'color' => ['rgb' => '000000']
                     ],
                     'alignment' => [
@@ -115,7 +92,7 @@ class LaporanExport implements FromCollection, WithHeadings, WithMapping, WithEv
                         'vertical' => Alignment::VERTICAL_CENTER
                     ],
                 ]);
-                $sheet->getRowDimension(1)->setRowHeight(30);
+                $sheet->getRowDimension(1)->setRowHeight(60);
 
                 // Style Header (Row 2)
                 $sheet->getStyle('A2:G2')->applyFromArray([

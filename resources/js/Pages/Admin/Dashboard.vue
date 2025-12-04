@@ -16,7 +16,6 @@
                 </p>
             </div>
         </div>
-
         <!-- Info Cards Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Admin Info Card -->
@@ -79,7 +78,6 @@
               </div>
             </div>
         </div>
-
         <!-- Attendance Table -->
         <div class="bg-white rounded-xl shadow-md border-t-4 border-red-600 overflow-hidden">
              <div class="p-6 border-b border-gray-100 flex justify-between items-center">
@@ -130,6 +128,8 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+
+import { usePage, router } from '@inertiajs/vue3';
 import { 
   CheckCircleIcon, 
   ClockIcon, 
@@ -138,15 +138,17 @@ import {
   CalendarIcon,
   UserIcon,
   BarChart3Icon,
-  ClipboardListIcon
+  ClipboardListIcon,
+  LogInIcon
 } from 'lucide-vue-next';
-import { usePage } from '@inertiajs/vue3';
 
 // Get data from the controller
 const props = defineProps({
   admin: Object,
   stats: Object,
   attendanceData: Array,
+  todayAttendance: Object,
+  todayIzin: Object,
 });
 
 // Prepare statistics data
@@ -208,11 +210,26 @@ const getStatusClass = (status) => {
     case 'Terlambat':
       return 'bg-yellow-100 text-yellow-800';
     case 'Izin':
+    case 'Izin Parsial':
+    case 'Izin Parsial (Check-in)':
+    case 'Izin Parsial (Selesai)':
       return 'bg-blue-100 text-blue-800';
+    case 'Sakit':
+      return 'bg-purple-100 text-purple-800';
+    case 'Cuti':
+      return 'bg-indigo-100 text-indigo-800';
     case 'Tidak Hadir':
       return 'bg-red-100 text-red-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }
+};
+
+const hasCheckedIn = computed(() => {
+  return props.todayAttendance && props.todayAttendance.waktu_masuk;
+});
+
+const goToAbsensi = () => {
+  router.visit('/admin/presensi');
 };
 </script>

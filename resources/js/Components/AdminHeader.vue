@@ -4,7 +4,7 @@
       <!-- Sidebar Toggle Button -->
       <button 
         class="text-gray-600 hover:text-[#dc2626] focus:outline-none focus:ring-2 focus:ring-[#dc2626]/30 rounded-lg p-1 transition-colors duration-200 mr-2"
-        @click="toggleSidebar"
+        @click.stop="toggleSidebar"
         aria-label="Toggle sidebar"
       >
         <MenuIcon class="w-6 h-6" />

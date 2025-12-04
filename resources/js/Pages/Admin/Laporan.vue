@@ -222,7 +222,7 @@
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Nama</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Tanggal Mulai</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Tanggal Selesai</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Jenis Izin</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Kategori Izin</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Dokumen</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Keterangan</th>
@@ -241,7 +241,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ formatDate(permission.tanggal_mulai) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ formatDate(permission.tanggal_selesai) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 capitalize">{{ permission.jenis_izin }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 capitalize">{{ permission.catatan }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span
                                         :class="getIzinStatusClass(permission.status)"

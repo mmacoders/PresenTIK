@@ -66,61 +66,115 @@ class LaporanController extends Controller
     
     public function exportExcel(Request $request)
     {
-        // Build query for attendances
-        $attendancesQuery = Absensi::with(['user'])->orderBy('created_at', 'desc');
-        
-        if ($request->search) {
-            $attendancesQuery->whereHas('user', function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%');
-            });
-        }
-
-        // Default date range if not provided
-        $now = Carbon::now();
-        $startDate = $request->start_date ?: $now->copy()->startOfMonth()->format('Y-m-d');
-        $endDate = $request->end_date ?: $now->copy()->endOfMonth()->format('Y-m-d');
-
-        $attendancesQuery->whereBetween('tanggal', [$startDate, $endDate]);
-        
-        // Get all results
-        $attendances = $attendancesQuery->get();
-        
-        return Excel::download(new LaporanExport($attendances), 'laporan-absensi.xlsx');
+        $reportData = $this->getReportData($request);
+        return Excel::download(new LaporanExport($reportData), 'laporan-absensi.xlsx');
     }
     
     public function exportPDF(Request $request)
     {
-        // Build query for attendances
-        $attendancesQuery = Absensi::with(['user'])->orderBy('created_at', 'desc');
+        $reportData = $this->getReportData($request);
         
-        if ($request->search) {
-            $attendancesQuery->whereHas('user', function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%');
-            });
-        }
-
-        if ($request->start_date) {
-            $attendancesQuery->where('tanggal', '>=', $request->start_date);
-        }
-        
-        if ($request->end_date) {
-            $attendancesQuery->where('tanggal', '<=', $request->end_date);
-        }
-        
-        // Get all results
-        $attendances = $attendancesQuery->get();
-        
-        // Default date range if not provided
         $now = Carbon::now();
-        $startDate = $request->start_date ?: $now->copy()->startOfMonth()->format('Y-m-d');
-        $endDate = $request->end_date ?: $now->copy()->endOfMonth()->format('Y-m-d');
+        $startDate = $request->start_date ? Carbon::parse($request->start_date) : $now->copy();
+        $endDate = $request->end_date ? Carbon::parse($request->end_date) : $now->copy();
 
         $pdf = DomPdf::loadView('pdf.laporan_absensi', [
-            'attendances' => $attendances,
-            'startDate' => $startDate,
-            'endDate' => $endDate
+            'attendances' => $reportData,
+            'startDate' => $startDate->format('Y-m-d'),
+            'endDate' => $endDate->format('Y-m-d')
         ]);
         return $pdf->download('laporan-absensi.pdf');
+    }
+
+    private function getReportData(Request $request)
+    {
+        // Get date range
+        $now = Carbon::now();
+        $startDate = $request->start_date ? Carbon::parse($request->start_date) : $now->copy();
+        $endDate = $request->end_date ? Carbon::parse($request->end_date) : $now->copy();
+        $search = $request->search;
+        
+        // Fetch Absensi records
+        $attendancesQuery = Absensi::whereBetween('tanggal', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->with('user');
+            
+        if ($search) {
+            $attendancesQuery->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
+            });
+        }
+        
+        $attendances = $attendancesQuery->get();
+
+        // Fetch Approved Izin records
+        $permissionsQuery = Izin::with('user')
+            ->where(function($q) use ($startDate, $endDate) {
+                $q->whereBetween('tanggal_mulai', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+                  ->orWhereBetween('tanggal_selesai', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
+            })
+            ->whereIn('status', ['approved', 'disetujui']);
+
+        if ($search) {
+            $permissionsQuery->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
+            });
+        }
+            
+        $permissions = $permissionsQuery->get();
+            
+        // Process data into a collection
+        $reportData = collect();
+        
+        // Add Absensi records
+        foreach ($attendances as $attendance) {
+            $reportObject = new \stdClass();
+            $reportObject->user = $attendance->user;
+            $reportObject->tanggal = $attendance->tanggal;
+            $reportObject->waktu_masuk = $attendance->waktu_masuk ?? '-';
+            $reportObject->waktu_keluar = $attendance->waktu_keluar ?? '-';
+            $reportObject->status = $this->getStatusText($attendance);
+            $reportObject->keterangan = $attendance->keterangan ?? '-';
+            
+            $reportData->push($reportObject);
+        }
+
+        // Add Izin records
+        foreach ($permissions as $permission) {
+            $pStart = Carbon::parse($permission->tanggal_mulai);
+            $pEnd = Carbon::parse($permission->tanggal_selesai);
+            
+            // Clamp to requested range
+            $loopStart = $pStart->max($startDate);
+            $loopEnd = $pEnd->min($endDate);
+            
+            $current = $loopStart->copy();
+            while ($current <= $loopEnd) {
+                $dateStr = $current->format('Y-m-d');
+                
+                $exists = $reportData->contains(function ($item) use ($permission, $dateStr) {
+                    return $item->user->id === $permission->user_id && $item->tanggal === $dateStr;
+                });
+                
+                if (!$exists) {
+                    $reportObject = new \stdClass();
+                    $reportObject->user = $permission->user;
+                    $reportObject->tanggal = $dateStr;
+                    $reportObject->waktu_masuk = '-';
+                    $reportObject->waktu_keluar = '-';
+                    $reportObject->status = $permission->catatan ?? 'Izin';
+                    $reportObject->keterangan = $permission->keterangan ?? 'Izin Resmi';
+                    
+                    $reportData->push($reportObject);
+                }
+                
+                $current->addDay();
+            }
+        }
+        
+        return $reportData->sortBy([
+            ['tanggal', 'desc'],
+            ['user.name', 'asc'],
+        ]);
     }
     
     // Helper function to get status text

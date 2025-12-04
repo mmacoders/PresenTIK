@@ -49,8 +49,10 @@
 </head>
 <body>
     <div class="header">
-        <h1>LAPORAN PRESENSI PERSONEL</h1>
-        <p>Periode: {{ \Carbon\Carbon::parse($startDate)->format('d F Y') }} - {{ \Carbon\Carbon::parse($endDate)->format('d F Y') }}</p>
+        <h1 style="margin-bottom: 10px; font-size: 14px;  text-decoration: underline;">KEPOLISIAN NEGARA REPUBLIK INDONESIA DAERAH GORONTALO</h1 >
+        <h1 style="margin-top: 0; margin-bottom: 10px; font-size: 14px; text-decoration: underline;">BIDANG TEKNOLOGI INFORMASI DAN KOMUNIKASI</h1>
+        
+        <h1 style="margin-bottom: 5px;">ABSEN APEL PAGI / SIANG PERSONIL POLRI / PNS</h1>
     </div>
 
     <table>
@@ -58,12 +60,11 @@
             <tr>
                 <th style="width: 5%">No</th>
                 <th style="width: 20%">Nama</th>
-                <th style="width: 20%">Pangkat / NRP</th>
+                <th style="width: 15%">Pangkat / NRP</th>
                 <th style="width: 15%">Jabatan</th>
-                <th style="width: 10%">Tanggal</th>
-                <th style="width: 10%">Jam Masuk</th>
+                <th style="width: 15%">Jam Masuk</th>
                 <th style="width: 10%">Status</th>
-                <th style="width: 10%">Ket</th>
+                <th style="width: 20%">Ket</th>
             </tr>
         </thead>
         <tbody>
@@ -73,8 +74,7 @@
                     <td>{{ $attendance->user->name ?? '-' }}</td>
                     <td>{{ ($attendance->user->pangkat ?? '-') . ' / ' . ($attendance->user->nrp ?? '-') }}</td>
                     <td>{{ $attendance->user->jabatan ?? '-' }}</td>
-                    <td class="text-center">{{ \Carbon\Carbon::parse($attendance->tanggal)->format('d/m/Y') }}</td>
-                    <td class="text-center">{{ $attendance->waktu_masuk ?? '-' }}</td>
+                    <td>{{ $attendance->waktu_masuk ?? '-' }}</td>
                     <td class="text-center">{{ $attendance->status }}</td>
                     <td>{{ $attendance->keterangan ?? '-' }}</td>
                 </tr>
@@ -87,7 +87,7 @@
     </table>
 
     <div class="footer">
-        <p>Dicetak pada: {{ \Carbon\Carbon::now()->format('d F Y H:i:s') }}</p>
+        <p>Dicetak pada: {{ \Carbon\Carbon::now()->format('d F Y H') }}</p>
     </div>
 </body>
 </html>

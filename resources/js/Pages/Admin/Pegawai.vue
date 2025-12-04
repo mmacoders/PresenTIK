@@ -346,13 +346,13 @@
                     id="nrp"
                     v-model="userForm.nrp"
                     type="text"
-                    class="mt-1 block w-full"
+                    class="mt-1 block w-full disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                     placeholder="Masukkan NRP"
+                    :disabled="showEditModal"
                   />
                   <InputError :message="userForm.errors.nrp" class="mt-2" />
                 </div>
 
-                <!-- NIP -->
                 <div>
                   <InputLabel for="nip" value="NIP" />
                   <TextInput

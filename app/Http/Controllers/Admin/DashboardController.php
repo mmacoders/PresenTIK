@@ -33,6 +33,11 @@ class DashboardController extends Controller
             ->with('user')
             ->orderBy('created_at', 'desc')
             ->get();
+            
+        // Get leave requests for today
+        $todayLeaveRequests = Izin::where('tanggal_mulai', '<=', $today)
+          ->where('tanggal_selesai', '>=', $today)
+          ->get();
         
         // Calculate statistics
         $totalUsers = $users->count();
@@ -41,18 +46,37 @@ class DashboardController extends Controller
             // Check if late based on system settings
             return $attendance->waktu_masuk && $attendance->waktu_masuk > $jamMasuk;
         })->count();
-        $absentToday = $totalUsers - $presentToday;
         
-        // Get leave requests for today
-        $leaveToday = Izin::where('tanggal_mulai', '<=', $today)
-          ->where('tanggal_selesai', '>=', $today)
-          ->count();
+        // Calculate leave count based on unique users on leave today
+        $leaveToday = $todayLeaveRequests->unique('user_id')->count();
         
-        // Prepare data for the attendance table - ONLY users with attendance records
-        $attendanceData = $this->prepareAttendanceData($todayAttendances, $jamMasuk);
+        // Absent is total users minus present minus leave (assuming leave implies not present, though they might overlap)
+        // A better way is to count users who are neither present nor on leave
+        $usersPresentIds = $todayAttendances->pluck('user_id')->toArray();
+        $usersOnLeaveIds = $todayLeaveRequests->pluck('user_id')->toArray();
+        
+        $absentToday = $users->whereNotIn('id', $usersPresentIds)
+                             ->whereNotIn('id', $usersOnLeaveIds)
+                             ->count();
+        
+        // Prepare data for the attendance table - Include ALL users
+        $attendanceData = $this->prepareAttendanceData($users, $todayAttendances, $todayLeaveRequests, $jamMasuk);
+        
+        // Get today's attendance for the admin
+        $adminAttendance = Absensi::where('user_id', $admin->id)
+            ->where('tanggal', $today)
+            ->first();
+            
+        // Get today's leave for the admin
+        $adminIzin = Izin::where('user_id', $admin->id)
+            ->where('tanggal_mulai', '<=', $today)
+            ->where('tanggal_selesai', '>=', $today)
+            ->first();
         
         return Inertia::render('Admin/Dashboard', [
             'admin' => $admin,
+            'todayAttendance' => $adminAttendance,
+            'todayIzin' => $adminIzin,
             'stats' => [
                 'present' => $presentToday,
                 'late' => $lateToday,
@@ -63,27 +87,68 @@ class DashboardController extends Controller
         ]);
     }
     
-    private function prepareAttendanceData($attendances, $jamMasuk)
+    private function prepareAttendanceData($users, $attendances, $leaveRequests, $jamMasuk)
     {
         $data = [];
         
-        // Only loop through attendances (users who have checked in today)
-        foreach ($attendances as $attendance) {
-            if (!$attendance->user) continue; // Skip if user not found
+        foreach ($users as $user) {
+            $attendance = $attendances->firstWhere('user_id', $user->id);
+            $leave = $leaveRequests->firstWhere('user_id', $user->id);
+            
+            $checkIn = '-';
+            $checkOut = '-';
+            $status = 'Tidak Hadir';
+            $keterangan = '-';
+            
+            if ($attendance) {
+                $checkIn = $attendance->waktu_masuk ? Carbon::parse($attendance->waktu_masuk)->format('H:i:s') : '-';
+                $checkOut = $attendance->waktu_keluar ? Carbon::parse($attendance->waktu_keluar)->format('H:i:s') : '-';
+                $status = $this->determineStatus($attendance, $leave, $jamMasuk);
+                $keterangan = $attendance->keterangan ?? '-';
+            } elseif ($leave) {
+                $status = 'Izin';
+                if ($leave->jenis_izin === 'sakit') $status = 'Sakit';
+                if ($leave->jenis_izin === 'cuti') $status = 'Cuti';
+                if ($leave->jenis_izin === 'parsial') $status = 'Izin Parsial';
+                $keterangan = $leave->alasan ?? '-';
+            }
             
             $data[] = [
-                'name' => $attendance->user->name,
-                'checkIn' => $attendance->waktu_masuk ? Carbon::parse($attendance->waktu_masuk)->format('H:i:s') : '-',
-                'checkOut' => $attendance->waktu_keluar ? Carbon::parse($attendance->waktu_keluar)->format('H:i:s') : '-',
-                'status' => $this->determineStatus($attendance, $attendance->user, $jamMasuk),
-                'keterangan' => $attendance->keterangan ?? '-',
+                'name' => $user->name,
+                'checkIn' => $checkIn,
+                'checkOut' => $checkOut,
+                'status' => $status,
+                'keterangan' => $keterangan,
             ];
         }
+        
+        // Sort data: Hadir/Terlambat first, then Izin, then Tidak Hadir
+        usort($data, function ($a, $b) {
+            $statusOrder = [
+                'Hadir' => 1,
+                'Terlambat' => 2, // Terlambat is usually part of Hadir logic but let's prioritize
+                'Izin' => 3,
+                'Sakit' => 3,
+                'Cuti' => 3,
+                'Izin Parsial' => 3,
+                'Tidak Hadir' => 4
+            ];
+            
+            // Helper to get order, handling complex strings like "Terlambat (10 menit)"
+            $getOrder = function($status) use ($statusOrder) {
+                foreach ($statusOrder as $key => $val) {
+                    if (strpos($status, $key) === 0) return $val;
+                }
+                return 4; // Default to last
+            };
+            
+            return $getOrder($a['status']) <=> $getOrder($b['status']);
+        });
         
         return $data;
     }
     
-    private function determineStatus($attendance, $user, $jamMasuk)
+    private function determineStatus($attendance, $leave, $jamMasuk)
     {
         // First check if there's a specific status in the attendance record
         if ($attendance && $attendance->status) {
@@ -130,14 +195,9 @@ class DashboardController extends Controller
         }
         
         // Check if user has an active leave request
-        $todayIzin = Izin::where('user_id', $user->id)
-            ->where('tanggal_mulai', '<=', Carbon::now()->format('Y-m-d'))
-            ->where('tanggal_selesai', '>=', Carbon::now()->format('Y-m-d'))
-            ->first();
-            
-        if ($todayIzin) {
+        if ($leave) {
             // Handle partial leave specifically
-            if ($todayIzin->jenis_izin === 'parsial') {
+            if ($leave->jenis_izin === 'parsial') {
                 // If we have attendance data, check its status
                 if ($attendance) {
                     if ($attendance->waktu_masuk && !$attendance->waktu_keluar) {
@@ -149,6 +209,10 @@ class DashboardController extends Controller
                 // Default for partial leave without attendance data
                 return 'Izin Parsial';
             }
+            
+            if ($leave->jenis_izin === 'sakit') return 'Sakit';
+            if ($leave->jenis_izin === 'cuti') return 'Cuti';
+            
             return 'Izin';
         }
         

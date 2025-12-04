@@ -50,7 +50,6 @@
                   </div>
               </div>
             </div>
-
             <!-- Stats Card -->
             <div class="bg-white rounded-xl shadow-md border-t-4 border-red-600 overflow-hidden lg:col-span-2 flex flex-col">
               <div class="p-6 flex-1 flex flex-col">
@@ -149,7 +148,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { usePage, router } from '@inertiajs/vue3';
 import VueApexCharts from "vue3-apexcharts";
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
 import {
@@ -162,11 +161,14 @@ import {
   PieChartIcon,
   BarChart3Icon,
   ClockIcon,
-  CalendarIcon
+  CalendarIcon,
+  LogInIcon
 } from 'lucide-vue-next';
 
 // Props
 const props = defineProps({
+  todayAttendance: Object,
+  todayIzin: Object,
   totalUsers: Number,
   totalAdmins: Number,
   presentToday: Number,
@@ -308,4 +310,12 @@ const attendanceChartSeries = computed(() => [
     data: props.weeklyAttendance?.absent || []
   }
 ]);
+
+const hasCheckedIn = computed(() => {
+  return props.todayAttendance && props.todayAttendance.waktu_masuk;
+});
+
+const goToAbsensi = () => {
+  router.visit('/superadmin/presensi');
+};
 </script>

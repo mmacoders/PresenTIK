@@ -332,6 +332,7 @@ import Swal from 'sweetalert2';
 
 const props = defineProps({
   todayAttendance: Object,
+  todayIzin: Object,
   recentAttendance: Array,
   systemSettings: Object,
 });
@@ -430,11 +431,13 @@ const isWithinPresensiHours = computed(() => {
 });
 
 const isCheckInDisabled = computed(() => {
-  return isSubmitting.value || !isWithinPresensiHours.value;
+  const isLeave = props.todayIzin && props.todayIzin.status === 'approved' && props.todayIzin.jenis_izin === 'penuh';
+  return isSubmitting.value || !isWithinPresensiHours.value || isLeave;
 });
 
 const getCheckInButtonText = computed(() => {
   if (isSubmitting.value) return 'Memproses...';
+  if (props.todayIzin && props.todayIzin.status === 'approved' && props.todayIzin.jenis_izin === 'penuh') return 'Sedang Izin';
   if (!isWithinPresensiHours.value) return 'Diluar Jam Presensi';
   return 'Check-in Sekarang';
 });

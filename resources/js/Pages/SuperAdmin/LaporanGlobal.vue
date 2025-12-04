@@ -230,7 +230,7 @@
                                         <th class="px-6 py-3">Role</th>
                                         <th class="px-6 py-3">Tanggal Mulai</th>
                                         <th class="px-6 py-3">Tanggal Selesai</th>
-                                        <th class="px-6 py-3">Jenis Izin</th>
+                                        <th class="px-6 py-3">Kategori Izin</th>
                                         <th class="px-6 py-3">Status</th>
                                         <th class="px-6 py-3">Keterangan</th>
                                     </tr>
@@ -245,7 +245,7 @@
                                         </td>
                                         <td class="px-6 py-3 text-gray-700">{{ formatDate(permission.tanggal_mulai) }}</td>
                                         <td class="px-6 py-3 text-gray-700">{{ formatDate(permission.tanggal_selesai) }}</td>
-                                        <td class="px-6 py-3 text-gray-700">{{ permission.jenis_izin }}</td>
+                                        <td class="px-6 py-3 text-gray-700">{{ permission.catatan }}</td>
                                         <td class="px-6 py-3">
                                             <span
                                                 :class="getIzinStatusClass(permission.status)"

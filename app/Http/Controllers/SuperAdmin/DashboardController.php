@@ -37,7 +37,20 @@ class DashboardController extends Controller
         // Get weekly attendance data for charts
         $weeklyAttendance = $this->getWeeklyAttendanceData();
         
+        // Get today's attendance for the superadmin
+        $superAdminAttendance = Absensi::where('user_id', auth()->id())
+            ->where('tanggal', date('Y-m-d'))
+            ->first();
+            
+        // Get today's leave for the superadmin
+        $superAdminIzin = \App\Models\Izin::where('user_id', auth()->id())
+            ->where('tanggal_mulai', '<=', date('Y-m-d'))
+            ->where('tanggal_selesai', '>=', date('Y-m-d'))
+            ->first();
+        
         return Inertia::render('SuperAdmin/Dashboard', [
+            'todayAttendance' => $superAdminAttendance,
+            'todayIzin' => $superAdminIzin,
             'totalUsers' => $totalUsers,
             'totalAdmins' => $totalAdmins,
             'presentToday' => $presentToday,

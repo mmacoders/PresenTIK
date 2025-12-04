@@ -7,7 +7,7 @@
         <div class="flex items-center">
           <!-- Sidebar Toggle Button (Visible on all screens) -->
           <button 
-            @click="$emit('toggle-sidebar')" 
+            @click.stop="$emit('toggle-sidebar')" 
             class="p-2 rounded-md text-gray-600 hover:bg-gray-100 mr-3 focus:outline-none focus:ring-2 focus:ring-[#dc2626]/30 transition-all duration-300"
             aria-label="Toggle sidebar"
           >

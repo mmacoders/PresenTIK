@@ -110,12 +110,12 @@
                         
                         <div class="w-full md:w-auto flex flex-col gap-2">
                              <button
-                                :disabled="hasCheckedIn || (todayIzin && todayIzin.jenis_izin === 'penuh')"
+                                :disabled="hasCheckedIn || (todayIzin && todayIzin.status === 'approved' && todayIzin.jenis_izin === 'penuh')"
                                 @click="goToAbsensi"
                                 class="w-full md:w-48 py-3 rounded-lg font-bold text-sm uppercase tracking-wide transition-all shadow-lg transform hover:-translate-y-0.5"
-                                :class="hasCheckedIn ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none' : 'bg-[#b21f1f] text-white hover:bg-[#991b1b] shadow-red-200'"
+                                :class="(hasCheckedIn || (todayIzin && todayIzin.status === 'approved' && todayIzin.jenis_izin === 'penuh')) ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none' : 'bg-[#b21f1f] text-white hover:bg-[#991b1b] shadow-red-200'"
                             >
-                                {{ hasCheckedIn ? 'Sudah Check-in' : 'Check-in Sekarang' }}
+                                {{ hasCheckedIn ? 'Sudah Check-in' : (todayIzin && todayIzin.status === 'approved' && todayIzin.jenis_izin === 'penuh' ? 'Sedang Izin' : 'Check-in Sekarang') }}
                             </button>
                         </div>
                     </div>
@@ -182,15 +182,15 @@
                          </td>
                          <td class="px-6 py-4 whitespace-nowrap">
                            <span 
-                             :class="item.type === 'attendance' ? getAttendanceStatusClass(item.data) : 'bg-blue-100 text-blue-700'" 
+                             :class="item.type === 'attendance' ? getAttendanceStatusClass(item.data) : getIzinStatusClass(item.data)" 
                              class="px-2 py-1 inline-flex text-xs leading-5 font-bold rounded uppercase"
                            >
-                              <template v-if="item.type === 'attendance'">
-                                {{ getAttendanceStatusText(item.data) }}
-                              </template>
-                              <template v-else>
-                                Izin {{ item.data.jenis_izin === 'penuh' ? '(Full)' : '(Parsial)' }}
-                              </template>
+                               <template v-if="item.type === 'attendance'">
+                                 {{ getAttendanceStatusText(item.data) }}
+                               </template>
+                               <template v-else>
+                                 {{ getIzinStatusText(item.data) }}
+                               </template>
                            </span>
                          </td>
                          <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -519,6 +519,26 @@ const getAttendanceStatusClass = (attendance) => {
     return 'bg-green-100 text-green-700'; // Has checked in
   } else {
     return 'bg-gray-100 text-gray-700'; // No attendance or absent
+  }
+};
+
+const getIzinStatusText = (izin) => {
+  if (izin.status === 'approved' || izin.status === 'disetujui') {
+    return `Izin Disetujui (${izin.jenis_izin === 'penuh' ? 'Full' : 'Parsial'})`;
+  } else if (izin.status === 'rejected' || izin.status === 'ditolak') {
+    return `Izin Ditolak`;
+  } else {
+    return `Menunggu Persetujuan`;
+  }
+};
+
+const getIzinStatusClass = (izin) => {
+  if (izin.status === 'approved' || izin.status === 'disetujui') {
+    return 'bg-green-100 text-green-700';
+  } else if (izin.status === 'rejected' || izin.status === 'ditolak') {
+    return 'bg-red-100 text-red-700';
+  } else {
+    return 'bg-yellow-100 text-yellow-800';
   }
 };
 </script>

@@ -120,6 +120,16 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
     Route::post('/api/system-settings/toggle', [App\Http\Controllers\API\SystemSettingController::class, 'toggleLocationValidation'])->name('api.system-settings.toggle');
 });
 
+// Landing Page
+Route::get('/', function () {
+    return Inertia::render('Welcome');
+})->name('welcome');
+
+// PWA Guide Page
+Route::get('/pwa-guide', function () {
+    return Inertia::render('PWAGuide');
+})->name('pwa-guide');
+
 Route::get('/dashboard', function () {
     // Redirect based on user role
     if (auth()->check()) {

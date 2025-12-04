@@ -242,6 +242,158 @@
         </div>
       </div>
 
+      <!-- Create/Edit Modal -->
+      <Modal :show="showCreateModal || showEditModal" @close="closeModal">
+        <div class="p-6">
+          <!-- Header -->
+          <div class="mb-6">
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <h3 class="text-xl font-bold text-gray-900">
+                  {{ showEditModal ? 'Edit Data Pegawai' : 'Tambah Pegawai Baru' }}
+                </h3>
+                <p class="text-sm text-gray-600 mt-1">
+                  {{ showEditModal ? 'Perbarui informasi data pegawai' : 'Lengkapi formulir di bawah untuk menambahkan pegawai baru' }}
+                </p>
+              </div>
+              <button @click="closeModal" class="text-gray-400 hover:text-gray-500">
+                <XIcon class="h-6 w-6" />
+              </button>
+            </div>
+            <div class="border-b border-gray-200"></div>
+          </div>
+
+          <form @submit.prevent="handleSubmit(userForm)" class="space-y-6">
+            <!-- Form Fields in 2 Columns -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Column 1 (Left) -->
+              <div class="space-y-4">
+                <!-- Nama Lengkap -->
+                <div>
+                  <InputLabel for="name" value="Nama Lengkap" />
+                  <TextInput
+                    id="name"
+                    v-model="userForm.name"
+                    type="text"
+                    class="mt-1 block w-full"
+                    placeholder="Masukkan nama lengkap"
+                    required
+                  />
+                  <InputError :message="userForm.errors.name" class="mt-2" />
+                </div>
+
+                <!-- Email -->
+                <div>
+                  <InputLabel for="email" value="Email" />
+                  <TextInput
+                    id="email"
+                    v-model="userForm.email"
+                    type="email"
+                    class="mt-1 block w-full"
+                    placeholder="email@example.com"
+                    required
+                  />
+                  <InputError :message="userForm.errors.email" class="mt-2" />
+                </div>
+
+                <!-- No HP -->
+                <div>
+                  <InputLabel for="no_hp" value="Nomor HP" />
+                  <TextInput
+                    id="no_hp"
+                    v-model="userForm.no_hp"
+                    type="text"
+                    class="mt-1 block w-full"
+                    placeholder="08xxxxxxxxxx"
+                  />
+                  <InputError :message="userForm.errors.no_hp" class="mt-2" />
+                </div>
+
+                <!-- Pangkat -->
+                <div>
+                  <InputLabel for="pangkat" value="Pangkat" />
+                  <TextInput
+                    id="pangkat"
+                    v-model="userForm.pangkat"
+                    type="text"
+                    class="mt-1 block w-full"
+                    placeholder="Masukkan pangkat"
+                  />
+                  <InputError :message="userForm.errors.pangkat" class="mt-2" />
+                </div>
+              </div>
+
+              <!-- Column 2 (Right) -->
+              <div class="space-y-4">
+                <!-- NRP -->
+                <div>
+                  <InputLabel for="nrp" value="NRP" />
+                  <TextInput
+                    id="nrp"
+                    v-model="userForm.nrp"
+                    type="text"
+                    class="mt-1 block w-full disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+                    placeholder="Masukkan NRP"
+                    :disabled="showEditModal"
+                  />
+                  <InputError :message="userForm.errors.nrp" class="mt-2" />
+                </div>
+
+                <!-- NIP -->
+                <div>
+                  <InputLabel for="nip" value="NIP" />
+                  <TextInput
+                    id="nip"
+                    v-model="userForm.nip"
+                    type="text"
+                    class="mt-1 block w-full"
+                    placeholder="Masukkan NIP"
+                  />
+                  <InputError :message="userForm.errors.nip" class="mt-2" />
+                </div>
+
+                <!-- Jabatan -->
+                <div>
+                  <InputLabel for="jabatan" value="Jabatan" />
+                  <TextInput
+                    id="jabatan"
+                    v-model="userForm.jabatan"
+                    type="text"
+                    class="mt-1 block w-full"
+                    placeholder="Masukkan jabatan"
+                  />
+                  <InputError :message="userForm.errors.jabatan" class="mt-2" />
+                </div>
+
+                <!-- Status -->
+                <div>
+                  <InputLabel for="status" value="Status" />
+                  <select
+                    id="status"
+                    v-model="userForm.status"
+                    class="mt-1 block w-full border-gray-300 focus:border-red-500 focus:ring-red-500 rounded-md shadow-sm"
+                  >
+                    <option value="aktif">Aktif</option>
+                    <option value="nonaktif">Nonaktif</option>
+                  </select>
+                  <InputError :message="userForm.errors.status" class="mt-2" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+              <SecondaryButton type="button" @click="closeModal">
+                Batal
+              </SecondaryButton>
+              <PrimaryButton type="submit" :disabled="userForm.processing">
+                {{ showEditModal ? 'Update' : 'Simpan' }}
+              </PrimaryButton>
+            </div>
+          </form>
+        </div>
+      </Modal>
+
       <!-- Delete Confirmation Modal -->
       <ConfirmModal
         :open="showDeleteModal"
