@@ -191,6 +191,9 @@
                         <button @click="viewDetail(admin)" class="text-blue-600 hover:text-blue-800 p-1 rounded transition-all duration-300" title="Detail">
                           <EyeIcon class="h-5 w-5" />
                         </button>
+                        <button @click="editAdmin(admin)" class="text-[#C62828] hover:text-[#b71c1c] p-1 rounded transition-all duration-300" title="Edit">
+                          <EditIcon class="h-5 w-5" />
+                        </button>
                         <button 
                           @click="toggleAdminStatus(admin)" 
                           :class="admin.status === 'active' ? 'text-red-500 hover:text-red-700' : 'text-green-600 hover:text-green-800'"
@@ -264,34 +267,46 @@
       <!-- Edit User Modal (Pegawai) - Create removed as per request -->
       <Modal :show="showUserModal" @close="closeModal">
         <div class="p-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">
+          <h3 class="text-lg font-medium text-gray-900 mb-2">
             Edit Pegawai
           </h3>
+          <p class="text-sm text-gray-500 mb-6">
+            Ubah informasi pegawai yang terdaftar. Field NRP tidak dapat diubah setelah disimpan.
+          </p>
           <form @submit.prevent="submitUserForm" class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <InputLabel for="nrp" value="NRP" />
+                <TextInput 
+                  id="nrp" 
+                  type="text" 
+                  class="mt-1 block w-full" 
+                  :class="{'bg-gray-100 cursor-not-allowed': userForm.nrp}"
+                  v-model="userForm.nrp" 
+                  :disabled="!!userForm.nrp"
+                />
+                <InputError class="mt-2" :message="userForm.errors.nrp" />
+              </div>
               <div>
                 <InputLabel for="name" value="Nama Lengkap" />
                 <TextInput id="name" type="text" class="mt-1 block w-full" v-model="userForm.name" required />
                 <InputError class="mt-2" :message="userForm.errors.name" />
               </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <InputLabel for="email" value="Email" />
                 <TextInput id="email" type="email" class="mt-1 block w-full" v-model="userForm.email" required />
                 <InputError class="mt-2" :message="userForm.errors.email" />
               </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <InputLabel for="nrp" value="NRP" />
-                <TextInput id="nrp" type="text" class="mt-1 block w-full" v-model="userForm.nrp" />
-                <InputError class="mt-2" :message="userForm.errors.nrp" />
-              </div>
-              <div>
-                 <InputLabel for="nip" value="NIP" />
-                <TextInput id="nip" type="text" class="mt-1 block w-full" v-model="userForm.nip" />
-                <InputError class="mt-2" :message="userForm.errors.nip" />
+               <div>
+                <InputLabel for="no_hp" value="No. HP" />
+                <TextInput id="no_hp" type="text" class="mt-1 block w-full" v-model="userForm.no_hp" />
+                <InputError class="mt-2" :message="userForm.errors.no_hp" />
               </div>
             </div>
+
              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <InputLabel for="pangkat" value="Pangkat" />
@@ -304,12 +319,8 @@
                 <InputError class="mt-2" :message="userForm.errors.jabatan" />
               </div>
             </div>
-             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <InputLabel for="no_hp" value="No. HP" />
-                <TextInput id="no_hp" type="text" class="mt-1 block w-full" v-model="userForm.no_hp" />
-                <InputError class="mt-2" :message="userForm.errors.no_hp" />
-              </div>
+
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
               <div>
                 <InputLabel for="status" value="Status" />
                 <select id="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500" v-model="userForm.status">
@@ -318,10 +329,10 @@
                 </select>
                 <InputError class="mt-2" :message="userForm.errors.status" />
               </div>
-            </div>
-            <div class="flex justify-end gap-4">
-              <SecondaryButton @click="closeModal">Batal</SecondaryButton>
-              <PrimaryButton :disabled="userForm.processing">Update</PrimaryButton>
+              <div class="flex justify-end gap-4 h-10"> <!-- H-10 aligns with input height -->
+                <SecondaryButton @click="closeModal" class="w-full justify-center">Batal</SecondaryButton>
+                <PrimaryButton :disabled="userForm.processing" class="w-full justify-center">Update</PrimaryButton>
+              </div>
             </div>
           </form>
         </div>
@@ -341,29 +352,56 @@
                <InputError class="mt-2" :message="adminForm.errors.nrp" />
             </div>
             <div v-else class="space-y-6">
+              <p class="text-sm text-gray-500 -mt-4 mb-4">
+                Ubah informasi admin yang terdaftar. Field NRP tidak dapat diubah setelah disimpan.
+              </p>
+               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div>
+                  <InputLabel for="admin_nrp_edit" value="NRP" />
+                  <TextInput 
+                    id="admin_nrp_edit" 
+                    type="text" 
+                    class="mt-1 block w-full bg-gray-100 cursor-not-allowed" 
+                    v-model="adminForm.nrp" 
+                    disabled
+                  />
+                  <InputError class="mt-2" :message="adminForm.errors.nrp" />
+                </div>
+                 <div>
+                 <InputLabel for="admin_name" value="Nama Lengkap" />
+                 <TextInput id="admin_name" type="text" class="mt-1 block w-full" v-model="adminForm.name" required />
+                 <InputError class="mt-2" :message="adminForm.errors.name" />
+               </div>
+               </div>
+
+               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                <div>
-                <InputLabel for="admin_name" value="Nama Lengkap" />
-                <TextInput id="admin_name" type="text" class="mt-1 block w-full" v-model="adminForm.name" required />
-                <InputError class="mt-2" :message="adminForm.errors.name" />
+                 <InputLabel for="admin_email" value="Email" />
+                 <TextInput id="admin_email" type="text" class="mt-1 block w-full" v-model="adminForm.email" required />
+                 <InputError class="mt-2" :message="adminForm.errors.email" />
+               </div>
+                <div>
+                 <InputLabel for="admin_no_hp" value="No. HP" />
+                 <TextInput id="admin_no_hp" type="text" class="mt-1 block w-full" v-model="adminForm.no_hp" />
+                 <InputError class="mt-2" :message="adminForm.errors.no_hp" />
+               </div>
               </div>
-              <div>
-                <InputLabel for="admin_email" value="Email" />
-                <TextInput id="admin_email" type="email" class="mt-1 block w-full" v-model="adminForm.email" required />
-                <InputError class="mt-2" :message="adminForm.errors.email" />
-              </div>
-              <div>
-                <InputLabel for="admin_jabatan" value="Jabatan" />
-                <TextInput id="admin_jabatan" type="text" class="mt-1 block w-full" v-model="adminForm.jabatan" />
-                <InputError class="mt-2" :message="adminForm.errors.jabatan" />
-              </div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                <div>
-                <InputLabel for="admin_status" value="Status" />
-                <select id="admin_status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500" v-model="adminForm.status">
-                  <option value="active">Aktif</option>
-                  <option value="inactive">Nonaktif</option>
-                </select>
-                <InputError class="mt-2" :message="adminForm.errors.status" />
+                 <InputLabel for="admin_pangkat" value="Pangkat" />
+                 <TextInput id="admin_pangkat" type="text" class="mt-1 block w-full" v-model="adminForm.pangkat" />
+                 <InputError class="mt-2" :message="adminForm.errors.pangkat" />
+               </div>
+               <div>
+                 <InputLabel for="admin_jabatan" value="Jabatan" />
+                 <TextInput id="admin_jabatan" type="text" class="mt-1 block w-full" v-model="adminForm.jabatan" />
+                 <InputError class="mt-2" :message="adminForm.errors.jabatan" />
+               </div>
               </div>
+
+
+               <!-- Status field removed for edit mode as requested -->
             </div>
             <div class="flex justify-end gap-4">
               <SecondaryButton @click="closeModal">Batal</SecondaryButton>
@@ -402,19 +440,19 @@
                     <p class="text-sm text-gray-500">Email</p>
                     <p class="font-medium">{{ detailData.email }}</p>
                 </div>
-                 <div v-if="activeTab === 'pegawai'">
+                 <div>
                     <p class="text-sm text-gray-500">NRP</p>
                     <p class="font-medium">{{ detailData.nrp || '-' }}</p>
                 </div>
-                 <div v-if="activeTab === 'pegawai'">
+                 <div>
                     <p class="text-sm text-gray-500">NIP</p>
                     <p class="font-medium">{{ detailData.nip || '-' }}</p>
                 </div>
-                 <div v-if="activeTab === 'pegawai'">
+                 <div>
                     <p class="text-sm text-gray-500">Pangkat</p>
                     <p class="font-medium">{{ detailData.pangkat || '-' }}</p>
                 </div>
-                 <div v-if="activeTab === 'pegawai'">
+                 <div>
                     <p class="text-sm text-gray-500">No. HP</p>
                     <p class="font-medium">{{ detailData.no_hp || '-' }}</p>
                 </div>
@@ -504,9 +542,12 @@ const userForm = useForm({
 
 const adminForm = useForm({
     nrp: '',
+    nip: '',
     name: '',
     email: '',
     jabatan: '',
+    pangkat: '',
+    no_hp: '',
     status: 'active',
 });
 
@@ -594,10 +635,14 @@ const submitUserForm = () => {
 // Admin Actions
 const editAdmin = (admin) => {
     editingAdmin.value = admin;
-    adminForm.name = admin.name;
-    adminForm.email = admin.email;
-    adminForm.jabatan = admin.jabatan;
-    adminForm.status = admin.status;
+    adminForm.nrp = admin.nrp || '';
+    adminForm.nip = admin.nip || '';
+    adminForm.name = admin.name || '';
+    adminForm.email = admin.email || '';
+    adminForm.jabatan = admin.jabatan || '';
+    adminForm.pangkat = admin.pangkat || '';
+    adminForm.no_hp = admin.no_hp || '';
+    adminForm.status = admin.status || 'active';
     showAdminModal.value = true;
 };
 

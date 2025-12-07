@@ -55,39 +55,61 @@
         <h1 style="margin-bottom: 5px;">ABSEN APEL PAGI / SIANG PERSONIL POLRI / PNS</h1>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 5%">No</th>
-                <th style="width: 20%">Nama</th>
-                <th style="width: 15%">Pangkat / NRP</th>
-                <th style="width: 15%">Jabatan</th>
-                <th style="width: 15%">Jam Masuk</th>
-                <th style="width: 10%">Status</th>
-                <th style="width: 20%">Ket</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($attendances as $index => $attendance)
+    @if($attendances->isEmpty())
+        <table>
+            <thead>
                 <tr>
-                    <td class="text-center">{{ $index + 1 }}</td>
-                    <td>{{ $attendance->user->name ?? '-' }}</td>
-                    <td>{{ ($attendance->user->pangkat ?? '-') . ' / ' . ($attendance->user->nrp ?? '-') }}</td>
-                    <td>{{ $attendance->user->jabatan ?? '-' }}</td>
-                    <td>{{ $attendance->waktu_masuk ?? '-' }}</td>
-                    <td class="text-center">{{ $attendance->status }}</td>
-                    <td>{{ $attendance->keterangan ?? '-' }}</td>
+                    <th style="width: 5%">No</th>
+                    <th style="width: 20%">Nama</th>
+                    <th style="width: 15%">Pangkat / NRP</th>
+                    <th style="width: 15%">Jabatan</th>
+                    <th style="width: 15%">Jam Masuk</th>
+                    <th style="width: 10%">Status</th>
+                    <th style="width: 20%">Ket</th>
                 </tr>
-            @empty
+            </thead>
+            <tbody>
                 <tr>
-                    <td colspan="8" class="text-center">Tidak ada data presensi untuk periode ini.</td>
+                    <td colspan="7" class="text-center">Tidak ada data presensi untuk periode ini.</td>
                 </tr>
-            @endforelse
-        </tbody>
-    </table>
-
-    <div class="footer">
-        <p>Dicetak pada: {{ \Carbon\Carbon::now()->format('d F Y H') }}</p>
-    </div>
+            </tbody>
+        </table>
+    @else
+        @foreach($attendances->groupBy('tanggal') as $date => $group)
+            <div style="margin-bottom: 10px; page-break-inside: avoid;">
+                <table style="margin-bottom: 5px;">
+                    <thead>
+                        <tr>
+                            <th colspan="7" style="background-color: #ddd; text-align: left; padding-left: 10px;">
+                                {{ \Carbon\Carbon::parse($date)->translatedFormat('l, d F Y') }}
+                            </th>
+                        </tr>
+                        <tr>
+                            <th style="width: 5%">No</th>
+                            <th style="width: 20%">Nama</th>
+                            <th style="width: 15%">Pangkat / NRP</th>
+                            <th style="width: 15%">Jabatan</th>
+                            <th style="width: 15%">Jam Masuk</th>
+                            <th style="width: 10%">Status</th>
+                            <th style="width: 20%">Ket</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($group as $index => $attendance)
+                            <tr>
+                                <td class="text-center">{{ $index + 1 }}</td>
+                                <td>{{ $attendance->user->name ?? '-' }}</td>
+                                <td>{{ ($attendance->user->pangkat ?? '-') . ' / ' . ($attendance->user->nrp ?? '-') }}</td>
+                                <td>{{ $attendance->user->jabatan ?? '-' }}</td>
+                                <td>{{ $attendance->waktu_masuk ?? '-' }}</td>
+                                <td class="text-center">{{ $attendance->status }}</td>
+                                <td>{{ $attendance->keterangan ?? '-' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endforeach
+    @endif
 </body>
 </html>

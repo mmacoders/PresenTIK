@@ -60,10 +60,14 @@ class AdminController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email,' . $admin->id,
             'jabatan' => 'nullable|string|max:255',
             'status' => 'required|in:active,inactive',
+            'nrp' => 'nullable|string|max:255',
+            'nip' => 'nullable|string|max:255',
+            'pangkat' => 'nullable|string|max:255',
+            'no_hp' => 'nullable|string|max:20',
         ]);
         
         // Update admin
-        $admin->update($request->only('name', 'email', 'jabatan', 'status'));
+        $admin->update($request->only('name', 'email', 'jabatan', 'status', 'nrp', 'nip', 'pangkat', 'no_hp'));
         
         return redirect()->back()->with('success', 'Admin berhasil diperbarui.');
     }

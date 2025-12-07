@@ -195,9 +195,33 @@ class AbsensiController extends Controller
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'keterangan' => 'required|string|max:500',
-            'catatan' => 'required|string|in:Izin,Sakit,Cuti,Lainnya',
-            'file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048', // 2MB max
         ]);
+
+        // Check for overlapping leave requests
+        $overlap = Izin::where('user_id', $user->id)
+            ->where('status', '!=', 'rejected')
+            ->where(function ($query) use ($request) {
+                // Check if new start date falls within existing range
+                $query->where(function ($q) use ($request) {
+                    $q->where('tanggal_mulai', '<=', $request->tanggal_mulai)
+                      ->where('tanggal_selesai', '>=', $request->tanggal_mulai);
+                })
+                // Check if new end date falls within existing range
+                ->orWhere(function ($q) use ($request) {
+                    $q->where('tanggal_mulai', '<=', $request->tanggal_selesai)
+                      ->where('tanggal_selesai', '>=', $request->tanggal_selesai);
+                })
+                // Check if existing range falls within new range
+                ->orWhere(function ($q) use ($request) {
+                    $q->where('tanggal_mulai', '>=', $request->tanggal_mulai)
+                      ->where('tanggal_selesai', '<=', $request->tanggal_selesai);
+                });
+            })
+            ->exists();
+
+        if ($overlap) {
+            return redirect()->back()->with('error', 'Anda sudah memiliki izin yang berlaku pada tanggal tersebut.');
+        }
         
         try {
             // Handle file upload for full leave requests

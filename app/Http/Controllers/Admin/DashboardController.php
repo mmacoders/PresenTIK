@@ -95,6 +95,11 @@ class DashboardController extends Controller
             $attendance = $attendances->firstWhere('user_id', $user->id);
             $leave = $leaveRequests->firstWhere('user_id', $user->id);
             
+            // Skip users who have not attended and are not on leave
+            if (!$attendance && !$leave) {
+                continue;
+            }
+            
             $checkIn = '-';
             $checkOut = '-';
             $status = 'Tidak Hadir';
@@ -122,11 +127,11 @@ class DashboardController extends Controller
             ];
         }
         
-        // Sort data: Hadir/Terlambat first, then Izin, then Tidak Hadir
+        // Sort data: Hadir/Terlambat first, then Izin
         usort($data, function ($a, $b) {
             $statusOrder = [
                 'Hadir' => 1,
-                'Terlambat' => 2, // Terlambat is usually part of Hadir logic but let's prioritize
+                'Terlambat' => 2,
                 'Izin' => 3,
                 'Sakit' => 3,
                 'Cuti' => 3,
@@ -134,7 +139,7 @@ class DashboardController extends Controller
                 'Tidak Hadir' => 4
             ];
             
-            // Helper to get order, handling complex strings like "Terlambat (10 menit)"
+            // Helper to get order
             $getOrder = function($status) use ($statusOrder) {
                 foreach ($statusOrder as $key => $val) {
                     if (strpos($status, $key) === 0) return $val;

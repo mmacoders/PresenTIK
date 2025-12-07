@@ -4,41 +4,43 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Absensi;
-
+use App\Models\SystemSetting; // Import SystemSetting
+use App\Models\User; // Import User
 use App\Models\Izin;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Pagination\LengthAwarePaginator; // Import Paginator
 use PDF;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\LaporanExport;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod; // Import Period
 use Barryvdh\DomPDF\Facade\Pdf as DomPdf;
 
 class LaporanController extends Controller
 {
     public function index(Request $request)
     {
-        // Build query for attendances
-        $attendancesQuery = Absensi::with(['user'])->orderBy('created_at', 'desc');
+        // --- Attendances Unified Data ---
+        $reportData = $this->getReportData($request);
         
-        if ($request->search) {
-            $attendancesQuery->whereHas('user', function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%');
-            });
-        }
+        // Manual Pagination
+        $currentPage = LengthAwarePaginator::resolveCurrentPage('attendances_page');
+        $perPage = 10;
+        $currentItems = $reportData->slice(($currentPage - 1) * $perPage, $perPage)->values();
+        $attendances = new LengthAwarePaginator(
+            $currentItems, 
+            $reportData->count(), 
+            $perPage, 
+            $currentPage, 
+            [
+                'path' => LengthAwarePaginator::resolveCurrentPath(),
+                'pageName' => 'attendances_page',
+            ]
+        );
+        $attendances->appends($request->all());
 
-        if ($request->start_date) {
-            $attendancesQuery->where('tanggal', '>=', $request->start_date);
-        }
-        
-        if ($request->end_date) {
-            $attendancesQuery->where('tanggal', '<=', $request->end_date);
-        }
-        
-        // Paginate results
-        $attendances = $attendancesQuery->paginate(10, ['*'], 'attendances_page')->withQueryString();
-
-        // Build query for permissions
+        // --- Permissions (Izin) Query (Maintained for separate tab) ---
         $permissionsQuery = Izin::with(['user'])->orderBy('created_at', 'desc');
 
         if ($request->search) {
@@ -88,125 +90,108 @@ class LaporanController extends Controller
 
     private function getReportData(Request $request)
     {
+        $setting = SystemSetting::first();
+        // Default cutoff 17:00:00 if not set
+        $cutoffTime = $setting ? ($setting->cutoff_time ?? '17:00:00') : '17:00:00';
+
         // Get date range
         $now = Carbon::now();
-        $startDate = $request->start_date ? Carbon::parse($request->start_date) : $now->copy();
-        $endDate = $request->end_date ? Carbon::parse($request->end_date) : $now->copy();
+        $startDate = $request->start_date ? Carbon::parse($request->start_date)->format('Y-m-d') : $now->copy()->startOfMonth()->format('Y-m-d');
+        $endDate = $request->end_date ? Carbon::parse($request->end_date)->format('Y-m-d') : $now->copy()->endOfMonth()->format('Y-m-d');
         $search = $request->search;
         
-        // Fetch Absensi records
-        $attendancesQuery = Absensi::whereBetween('tanggal', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-            ->with('user');
-            
+        $usersQuery = User::query();
         if ($search) {
-            $attendancesQuery->whereHas('user', function($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%');
-            });
+             $usersQuery->where('name', 'like', "%$search%");
         }
+        $users = $usersQuery->get();
         
-        $attendances = $attendancesQuery->get();
-
-        // Fetch Approved Izin records
-        $permissionsQuery = Izin::with('user')
+        // Pre-fetch Absensi
+        $absensis = Absensi::with('user')
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->get();
+            
+        // Pre-fetch Approved/Disetujui Izin
+        $izins = Izin::with('user')
             ->where(function($q) use ($startDate, $endDate) {
-                $q->whereBetween('tanggal_mulai', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-                  ->orWhereBetween('tanggal_selesai', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
+                 $q->whereBetween('tanggal_mulai', [$startDate, $endDate])
+                   ->orWhereBetween('tanggal_selesai', [$startDate, $endDate]);
             })
-            ->whereIn('status', ['approved', 'disetujui']);
-
-        if ($search) {
-            $permissionsQuery->whereHas('user', function($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%');
-            });
-        }
+            ->whereIn('status', ['approved', 'disetujui'])
+            ->get();
             
-        $permissions = $permissionsQuery->get();
-            
-        // Process data into a collection
-        $reportData = collect();
+        $data = collect();
+        $period = CarbonPeriod::create($startDate, $endDate);
         
-        // Add Absensi records
-        foreach ($attendances as $attendance) {
-            $reportObject = new \stdClass();
-            $reportObject->user = $attendance->user;
-            $reportObject->tanggal = $attendance->tanggal;
-            $reportObject->waktu_masuk = $attendance->waktu_masuk ?? '-';
-            $reportObject->waktu_keluar = $attendance->waktu_keluar ?? '-';
-            $reportObject->status = $this->getStatusText($attendance);
-            $reportObject->keterangan = $attendance->keterangan ?? '-';
+        foreach ($period as $date) {
+            $dateStr = $date->format('Y-m-d');
             
-            $reportData->push($reportObject);
-        }
+            // Check if we should mark as Absent
+            $isPast = $date->lt(Carbon::now()->startOfDay());
+            $isLateToday = $date->isToday() && Carbon::now()->format('H:i:s') > $cutoffTime;
+            $shouldCheckAbsence = $isPast || $isLateToday;
 
-        // Add Izin records
-        foreach ($permissions as $permission) {
-            $pStart = Carbon::parse($permission->tanggal_mulai);
-            $pEnd = Carbon::parse($permission->tanggal_selesai);
-            
-            // Clamp to requested range
-            $loopStart = $pStart->max($startDate);
-            $loopEnd = $pEnd->min($endDate);
-            
-            $current = $loopStart->copy();
-            while ($current <= $loopEnd) {
-                $dateStr = $current->format('Y-m-d');
-                
-                $exists = $reportData->contains(function ($item) use ($permission, $dateStr) {
-                    return $item->user->id === $permission->user_id && $item->tanggal === $dateStr;
-                });
-                
-                if (!$exists) {
-                    $reportObject = new \stdClass();
-                    $reportObject->user = $permission->user;
-                    $reportObject->tanggal = $dateStr;
-                    $reportObject->waktu_masuk = '-';
-                    $reportObject->waktu_keluar = '-';
-                    $reportObject->status = $permission->catatan ?? 'Izin';
-                    $reportObject->keterangan = $permission->keterangan ?? 'Izin Resmi';
-                    
-                    $reportData->push($reportObject);
+            foreach ($users as $user) {
+                // 1. Check Existing Absensi
+                $att = $absensis->where('user_id', $user->id)->where('tanggal', $dateStr)->first();
+                if ($att) {
+                    $item = new \stdClass();
+                    $item->id = $att->id; 
+                    $item->user = $user;
+                    $item->tanggal = $att->tanggal;
+                    $item->waktu_masuk = $att->waktu_masuk;
+                    $item->waktu_keluar = $att->waktu_keluar;
+                    $item->status = $this->formatStatus($att->status);
+                    $item->keterangan = $att->keterangan;
+                    $data->push($item);
+                    continue;
                 }
                 
-                $current->addDay();
+                // 2. Check Izin
+                $perm = $izins->filter(function($i) use ($dateStr, $user) {
+                    return $i->user_id == $user->id && 
+                           $i->tanggal_mulai <= $dateStr && 
+                           $i->tanggal_selesai >= $dateStr;
+                })->first();
+                
+                if ($perm) {
+                   $item = new \stdClass();
+                   $item->id = 'izin_' . $perm->id . '_' . $dateStr;
+                   $item->user = $user;
+                   $item->tanggal = $dateStr;
+                   $item->waktu_masuk = '-';
+                   $item->waktu_keluar = '-';
+                   $item->status = 'Izin (' . $perm->catatan . ')';
+                   $item->keterangan = $perm->keterangan;
+                   $data->push($item);
+                   continue;
+                }
+                
+                // 3. Mark as Absent if applicable
+                if ($shouldCheckAbsence) {
+                   $item = new \stdClass();
+                   $item->id = 'alpha_' . $user->id . '_' . $dateStr;
+                   $item->user = $user;
+                   $item->tanggal = $dateStr;
+                   $item->waktu_masuk = '-';
+                   $item->waktu_keluar = '-';
+                   $item->status = 'Tidak Hadir (Alpha)';
+                   $item->keterangan = '-';
+                   $data->push($item);
+                }
             }
         }
         
-        return $reportData->sortBy([
+        return $data->sortBy([
             ['tanggal', 'desc'],
             ['user.name', 'asc'],
-        ]);
+        ])->values();
     }
     
-    // Helper function to get status text
-    private function getStatusText($attendance)
-    {
-        // Handle all possible status values from the database
-        switch ($attendance->status) {
-            case 'izin':
-            case 'Izin':
-            case 'Izin (Valid)':
-                return 'Izin';
-            case 'sakit':
-                return 'Sakit';
-            case 'terlambat':
-            case 'Terlambat':
-                return 'Terlambat';
-            case 'hadir':
-            case 'Hadir':
-                return $attendance->waktu_masuk ? 'Hadir' : 'Belum Absen';
-            case 'Izin Parsial (Check-in)':
-                return 'Izin Parsial (Check-in)';
-            case 'Izin Parsial (Selesai)':
-                return 'Izin Parsial (Selesai)';
-            default:
-                // Handle any other status values or null status
-                if ($attendance->waktu_masuk && $attendance->waktu_keluar) {
-                    return 'Hadir';
-                } else if ($attendance->waktu_masuk) {
-                    return 'Sudah Check-in';
-                } else {
-                    return $attendance->status ?: 'Belum Absen';
-                }
-        }
+    private function formatStatus($status) {
+        if (!$status) return 'Belum Absen';
+        if (stripos($status, 'hadir') !== false) return 'Hadir';
+        if (stripos($status, 'terlambat') !== false) return 'Terlambat';
+        return ucfirst($status);
     }
 }

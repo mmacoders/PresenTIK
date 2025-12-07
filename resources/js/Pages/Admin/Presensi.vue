@@ -136,7 +136,12 @@
               
               <button 
                 @click="showPermissionModal = true"
-                class="w-full py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200 font-semibold flex items-center justify-center text-lg shadow-md hover:shadow-lg"
+                :disabled="todayAttendance && todayAttendance.waktu_masuk && todayAttendance.waktu_masuk !== '-'"
+                :title="todayAttendance && todayAttendance.waktu_masuk && todayAttendance.waktu_masuk !== '-' ? 'Anda sudah melakukan presensi hari ini' : 'Ajukan Izin'"
+                class="w-full py-4 rounded-xl transition-all duration-200 font-semibold flex items-center justify-center text-lg shadow-md hover:shadow-lg"
+                :class="todayAttendance && todayAttendance.waktu_masuk && todayAttendance.waktu_masuk !== '-' 
+                  ? 'bg-gray-400 text-white cursor-not-allowed opacity-75' 
+                  : 'bg-blue-600 text-white hover:bg-blue-700'"
               >
                 <PlusIcon class="w-6 h-6 mr-2" />
                 Ajukan Izin
@@ -179,7 +184,7 @@
               <tbody class="bg-white divide-y divide-gray-200">
                 <tr v-for="attendance in recentAttendance" :key="attendance.id" class="hover:bg-gray-50">
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ formatDate(attendance.tanggal) }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ attendance.waktu_masuk }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ formatTime(attendance.waktu_masuk) }}</td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span :class="getStatusClass(attendance.status)" class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">
                       {{ attendance.status }}
@@ -650,9 +655,32 @@ const formatDate = (dateString) => {
   });
 };
 
+const formatTime = (timeString) => {
+  if (!timeString || timeString === '-') return '-';
+  // Check if it's already in simplified format like "08:00:00"
+  if (timeString.length <= 8) return timeString;
+  
+  // Try to parse as Date if it's an ISO string
+  try {
+    const date = new Date(timeString);
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+  } catch (e) {
+    return timeString;
+  }
+  return timeString;
+};
+
 const getStatusClass = (status) => {
   if (status === 'Hadir') return 'bg-green-100 text-green-800';
   if (status === 'Terlambat') return 'bg-yellow-100 text-yellow-800';
+  if (status && (status.startsWith('Tidak Hadir') || status.includes('(Ditolak)'))) return 'bg-red-100 text-red-800';
+  if (status && (['Izin', 'Sakit', 'Cuti', 'Lainnya'].some(s => status.includes(s)))) return 'bg-blue-100 text-blue-800';
   return 'bg-gray-100 text-gray-800';
 };
 

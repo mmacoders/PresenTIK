@@ -201,6 +201,30 @@
             <div v-else class="space-y-6">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
+                  <InputLabel for="nrp_edit" value="NRP" class="text-gray-700 font-medium" />
+                  <TextInput
+                    id="nrp_edit"
+                    type="text"
+                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#C62828] focus:ring-[#C62828]"
+                    v-model="adminForm.nrp"
+                  />
+                  <InputError class="mt-2" :message="adminForm.errors.nrp" />
+                </div>
+
+                <div>
+                  <InputLabel for="nip_edit" value="NIP" class="text-gray-700 font-medium" />
+                  <TextInput
+                    id="nip_edit"
+                    type="text"
+                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#C62828] focus:ring-[#C62828]"
+                    v-model="adminForm.nip"
+                  />
+                  <InputError class="mt-2" :message="adminForm.errors.nip" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
                   <InputLabel for="name" value="Nama Lengkap" class="text-gray-700 font-medium" />
                   <TextInput
                     id="name"
@@ -227,15 +251,38 @@
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
+                  <InputLabel for="pangkat" value="Pangkat" class="text-gray-700 font-medium" />
+                  <TextInput
+                    id="pangkat"
+                    type="text"
+                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#C62828] focus:ring-[#C62828]"
+                    v-model="adminForm.pangkat"
+                  />
+                  <InputError class="mt-2" :message="adminForm.errors.pangkat" />
+                </div>
+
+                <div>
                   <InputLabel for="jabatan" value="Jabatan" class="text-gray-700 font-medium" />
                   <TextInput
                     id="jabatan"
                     type="text"
                     class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#C62828] focus:ring-[#C62828]"
                     v-model="adminForm.jabatan"
-                    required
                   />
                   <InputError class="mt-2" :message="adminForm.errors.jabatan" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <InputLabel for="no_hp" value="No. HP" class="text-gray-700 font-medium" />
+                  <TextInput
+                    id="no_hp"
+                    type="text"
+                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#C62828] focus:ring-[#C62828]"
+                    v-model="adminForm.no_hp"
+                  />
+                  <InputError class="mt-2" :message="adminForm.errors.no_hp" />
                 </div>
 
                 <div>
@@ -439,9 +486,12 @@ const adminsPerPage = ref(10);
 
 const adminForm = useForm({
   nrp: '',
+  nip: '',
   name: '',
   email: '',
   jabatan: '',
+  pangkat: '',
+  no_hp: '',
   status: 'active',
 });
 
@@ -560,10 +610,14 @@ const handleSubmit = () => {
 
 const editAdmin = (admin) => {
   editingAdmin.value = admin;
-  adminForm.name = admin.name;
-  adminForm.email = admin.email;
-  adminForm.jabatan = admin.jabatan;
-  adminForm.status = admin.status;
+  adminForm.nrp = admin.nrp || '';
+  adminForm.nip = admin.nip || '';
+  adminForm.name = admin.name || '';
+  adminForm.email = admin.email || '';
+  adminForm.jabatan = admin.jabatan || '';
+  adminForm.pangkat = admin.pangkat || '';
+  adminForm.no_hp = admin.no_hp || '';
+  adminForm.status = admin.status || 'active';
   showEditModal.value = true;
 };
 

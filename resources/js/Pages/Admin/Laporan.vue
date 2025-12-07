@@ -241,13 +241,13 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ formatDate(permission.tanggal_mulai) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ formatDate(permission.tanggal_selesai) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 capitalize">{{ permission.catatan }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 capitalize">Izin ({{ permission.catatan }})</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span
                                         :class="getIzinStatusClass(permission.status)"
                                         class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
                                     >
-                                        {{ permission.status }}
+                                        {{ getIzinStatusText(permission.status) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -436,16 +436,36 @@ const getStatusClass = (attendance) => {
     }
 };
 
+const getIzinStatusText = (status) => {
+    switch (status) {
+        case 'approved':
+        case 'disetujui':
+            return 'Disetujui';
+        case 'rejected':
+        case 'ditolak':
+            return 'Ditolak';
+        case 'pending':
+        case 'diajukan':
+            return 'Menunggu Persetujuan';
+        default:
+            return status;
+    }
+};
+
 const getIzinStatusClass = (status) => {
     switch (status) {
         case 'Disetujui':
         case 'approved':
+        case 'disetujui':
             return 'bg-green-100 text-green-800';
         case 'Ditolak':
         case 'rejected':
+        case 'ditolak':
             return 'bg-red-100 text-red-800';
         case 'Diajukan':
         case 'pending':
+        case 'diajukan':
+        case 'Menunggu Persetujuan':
             return 'bg-yellow-100 text-yellow-800';
         default:
             return 'bg-gray-100 text-gray-800';
@@ -460,7 +480,7 @@ const getRoleText = (role) => {
         case 'admin':
             return 'Admin';
         case 'user':
-            return 'User';
+            return 'Pegawai';
         default:
             return role;
     }

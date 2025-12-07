@@ -245,13 +245,13 @@
                                         </td>
                                         <td class="px-6 py-3 text-gray-700">{{ formatDate(permission.tanggal_mulai) }}</td>
                                         <td class="px-6 py-3 text-gray-700">{{ formatDate(permission.tanggal_selesai) }}</td>
-                                        <td class="px-6 py-3 text-gray-700">{{ permission.catatan }}</td>
+                                        <td class="px-6 py-3 text-gray-700">Izin ({{ permission.catatan }})</td>
                                         <td class="px-6 py-3">
                                             <span
                                                 :class="getIzinStatusClass(permission.status)"
                                                 class="px-3 py-1 rounded-full text-xs font-semibold"
                                             >
-                                                {{ permission.status }}
+                                                {{ getIzinStatusText(permission.status) }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-3 text-gray-700">
@@ -400,13 +400,36 @@ const getStatusClass = (attendance) => {
     }
 };
 
+const getIzinStatusText = (status) => {
+    switch (status) {
+        case 'approved':
+        case 'disetujui':
+            return 'Disetujui';
+        case 'rejected':
+        case 'ditolak':
+            return 'Ditolak';
+        case 'pending':
+        case 'diajukan':
+            return 'Menunggu Persetujuan';
+        default:
+            return status;
+    }
+};
+
 const getIzinStatusClass = (status) => {
     switch (status) {
         case 'Disetujui':
+        case 'approved':
+        case 'disetujui':
             return 'bg-green-100 text-green-800';
         case 'Ditolak':
+        case 'rejected':
+        case 'ditolak':
             return 'bg-red-100 text-red-800';
         case 'Diajukan':
+        case 'pending':
+        case 'diajukan':
+        case 'Menunggu Persetujuan':
             return 'bg-yellow-100 text-yellow-800';
         default:
             return 'bg-gray-100 text-gray-800';

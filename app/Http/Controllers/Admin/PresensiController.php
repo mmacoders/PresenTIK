@@ -21,10 +21,43 @@ class PresensiController extends Controller
             ->first();
         
         // Get recent attendance (last 7 days)
-        $recentAttendance = Absensi::where('user_id', $user->id)
-            ->orderBy('tanggal', 'desc')
-            ->limit(7)
-            ->get();
+        // Get recent attendance (last 30 days combined with Izin)
+        $startWindow = now()->subDays(30);
+
+        $presensi = Absensi::where('user_id', $user->id)
+            ->where('tanggal', '>=', $startWindow)
+            ->get()
+            ->toBase()
+            ->map(function ($item) {
+                return [
+                    'id' => 'presensi_' . $item->id,
+                    'tanggal' => $item->tanggal,
+                    'waktu_masuk' => $item->waktu_masuk ?? '-',
+                    'status' => $item->status,
+                ];
+            });
+
+        $izin = \App\Models\Izin::where('user_id', $user->id)
+            ->where('tanggal_mulai', '>=', $startWindow)
+            ->get()
+            ->toBase()
+            ->map(function ($item) {
+                $statusFormatted = $item->catatan ?? 'Izin';
+                if ($item->status === 'pending') {
+                    $statusFormatted .= ' (Menunggu)';
+                } elseif ($item->status === 'rejected') {
+                    $statusFormatted .= ' (Ditolak)';
+                }
+                
+                return [
+                    'id' => 'izin_' . $item->id,
+                    'tanggal' => $item->tanggal_mulai,
+                    'waktu_masuk' => '-',
+                    'status' => $statusFormatted,
+                ];
+            });
+
+        $recentAttendance = $presensi->merge($izin)->sortByDesc('tanggal')->take(7)->values();
         
         // Get system settings
         $systemSettings = SystemSetting::first();
@@ -125,8 +158,33 @@ class PresensiController extends Controller
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'keterangan' => 'required|string|max:500',
             'catatan' => 'required|string|in:Izin,Sakit,Cuti,Lainnya',
-            'file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
+
+        // Check for overlapping leave requests
+        $overlap = \App\Models\Izin::where('user_id', $user->id)
+            ->where('status', '!=', 'rejected')
+            ->where(function ($query) use ($request) {
+                // Check if new start date falls within existing range
+                $query->where(function ($q) use ($request) {
+                    $q->where('tanggal_mulai', '<=', $request->tanggal_mulai)
+                      ->where('tanggal_selesai', '>=', $request->tanggal_mulai);
+                })
+                // Check if new end date falls within existing range
+                ->orWhere(function ($q) use ($request) {
+                    $q->where('tanggal_mulai', '<=', $request->tanggal_selesai)
+                      ->where('tanggal_selesai', '>=', $request->tanggal_selesai);
+                })
+                // Check if existing range falls within new range
+                ->orWhere(function ($q) use ($request) {
+                    $q->where('tanggal_mulai', '>=', $request->tanggal_mulai)
+                      ->where('tanggal_selesai', '<=', $request->tanggal_selesai);
+                });
+            })
+            ->exists();
+
+        if ($overlap) {
+            return back()->with('error', 'Anda sudah memiliki izin yang berlaku pada tanggal tersebut.');
+        }
         
         // Handle file upload
         $filePath = null;
