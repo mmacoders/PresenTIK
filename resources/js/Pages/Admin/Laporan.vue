@@ -190,7 +190,7 @@
                                         {{ getRoleText(attendance.user?.role) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ attendance.waktu_masuk || '-' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ formatTime(attendance.waktu_masuk) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span
                                         :class="getStatusClass(attendance)"
@@ -404,6 +404,18 @@ const formatDate = (dateString) => {
     if (!dateString) return '-';
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('id-ID', options);
+};
+
+const formatTime = (timeString) => {
+    if (!timeString || timeString === '-') return '-';
+    const date = new Date(timeString);
+    if (isNaN(date.getTime())) return timeString;
+    return date.toLocaleTimeString('id-ID', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit', 
+        hour12: false 
+    }).replace(/\./g, ':');
 };
 
 const getStatusText = (attendance) => {

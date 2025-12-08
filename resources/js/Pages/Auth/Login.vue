@@ -1,4 +1,4 @@
-<script setup>
+    <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import InputError from '@/Components/InputError.vue';
 import { UserIcon, LockIcon, EyeIcon, EyeOffIcon } from 'lucide-vue-next';
@@ -31,7 +31,7 @@ const submit = () => {
 <template>
     <Head title="Presensi TIK - Login" />
 
-    <div class="min-h-screen flex bg-white">
+    <div class="min-h-screen flex bg-gray-900 lg:bg-white">
         <!-- Left Side - Branding (Hidden on mobile) -->
         <div class="hidden lg:flex lg:w-1/2 bg-gray-900 relative overflow-hidden items-center justify-center">
             <!-- Background Pattern -->
@@ -53,6 +53,21 @@ const submit = () => {
 
         <!-- Right Side - Login Form -->
         <div class="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 lg:p-16 relative">
+
+            <!-- Mobile Background -->
+        <div class="absolute inset-0 lg:hidden opacity-10">
+            <svg class="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <path d="M0 100 C 20 0 50 0 100 100 Z" fill="#dc2626" />
+            </svg>
+        </div>
+
+        <div class="absolute top-0 right-0 w-64 h-64 rounded-full bg-red-600 blur-3xl opacity-20 lg:hidden">
+        </div>
+
+        <div class="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-red-600 blur-3xl opacity-20 lg:hidden">
+        </div>
+            
+        
             <div class="w-full max-w-md space-y-8">
                 <!-- Mobile Logo (Visible only on small screens) -->
                 <div class="lg:hidden text-center mb-8">
@@ -62,8 +77,14 @@ const submit = () => {
                 </div>
 
                 <div class="text-center lg:text-left">
-                    <h2 class="text-3xl font-bold text-gray-900 tracking-tight">Selamat Datang</h2>
-                    <p class="mt-2 text-gray-600">Silahkan login untuk mengakses akun Anda</p>
+                    <h2 class="text-3xl font-bold text-white lg:text-gray-900 tracking-tight">
+                    Selamat Datang
+                    </h2>
+
+                    <p class="mt-2 text-gray-300 lg:text-gray-600">
+                    Silahkan login untuk mengakses akun Anda
+                    </p>
+                    
                 </div>
 
                 <div v-if="status" class="p-4 rounded-lg bg-green-50 text-green-700 text-sm font-medium border border-green-200 flex items-center">
@@ -74,7 +95,9 @@ const submit = () => {
                 <form @submit.prevent="submit" class="mt-8 space-y-6">
                     <div class="space-y-5">
                         <div>
-                            <label for="nrp" class="block text-sm font-semibold text-gray-700 mb-1">NRP / NIP</label>
+                            <label class="block text-sm font-semibold text-white lg:text-gray-700 mb-1">NRP / NIP</label>
+
+                            
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <UserIcon class="h-5 w-5 text-gray-400" />
@@ -93,7 +116,7 @@ const submit = () => {
                         </div>
 
                         <div>
-                            <label for="password" class="block text-sm font-semibold text-gray-700 mb-1">Password</label>
+                            <label class="block text-sm font-semibold text-white lg:text-gray-700 mb-1">PASSWORD</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <LockIcon class="h-5 w-5 text-gray-400" />
@@ -130,14 +153,14 @@ const submit = () => {
                                     class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded cursor-pointer transition-colors"
                                 />
                             </div>
-                            <span class="ms-2 text-sm text-gray-600 group-hover:text-gray-900 transition-colors">Ingat Saya</span>
+                            <span class="ms-2 text-sm text-white lg:text-gray-600 lg:group-hover:text-gray-900">Ingat saya</span>
                         </label>
 
                         <Link
                             v-if="canResetPassword"
                             :href="route('password.request')"
-                            class="text-sm font-medium text-red-600 hover:text-red-800 transition-colors"
-                        >
+                            class="text-sm font-medium text-white hover:text-gray-200 
+                            lg:text-red-600 lg:hover:text-red-800">
                             Lupa Password?
                         </Link>
                     </div>
@@ -184,4 +207,4 @@ const submit = () => {
 .animate-fade-in-up {
     animation: fadeInUp 0.8s ease-out;
 }
-</style>
+</style>                                                                                                                                                                                                   

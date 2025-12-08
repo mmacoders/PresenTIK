@@ -1,11 +1,32 @@
 <template>
   <aside 
-    class="bg-[#111827] text-white flex flex-col fixed h-screen transition-all ease-in-out duration-300 shadow-xl z-50 font-sans md:translate-x-0"
+      class="bg-[#111827] text-white flex flex-col fixed h-screen transition-all ease-in-out duration-300 shadow-xl z-50 font-sans md:translate-x-0"
     :class="[
       isCollapsed ? 'w-20' : 'w-64',
       sidebarOpen ? 'translate-x-0' : '-translate-x-full'
     ]"
   >
+
+  <!-- Background gradient + curve -->
+    <div class="absolute inset-0 -z-10 overflow-hidden">
+        <!-- wave SVG -->
+        <svg class="absolute top-0 left-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path d="M0 100 C 20 0 50 0 100 100 Z" fill="url(#sidebarGradient)" />
+            <defs>
+              <linearGradient id="sidebarGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#111827" />
+              <stop offset="50%" stop-color="#1f2937" />
+              <stop offset="100%" stop-color="#000000" />
+              </linearGradient>
+            </defs>
+        </svg>
+
+          <!-- Optional glow -->
+        <div class="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-gray-700 blur-3xl opacity-20"></div>
+        <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-gray-700 blur-3xl opacity-20"></div>
+    </div>
+
+
     <!-- Sidebar Header with Logo and Toggle Button -->
     <div class="px-4 py-4 border-b border-gray-800 flex items-center justify-between relative">
       <transition name="fade" mode="out-in">

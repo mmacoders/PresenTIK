@@ -35,14 +35,20 @@ class LaporanController extends Controller
         
         // --- Attendances Unified Data ---
         $reportData = $this->getAttendanceReportData($startDate, $endDate, $search);
+
+        // Filter out "Izin" records for the Presensi Tab view
+        // The user requested Izin not to show in Presensi tab, effectively showing only Hadir and Alpha
+        $displayData = $reportData->filter(function($row) {
+            return stripos($row->status, 'Izin') === false;
+        });
         
         // Manual Pagination
         $currentPage = LengthAwarePaginator::resolveCurrentPage('attendances_page');
         $perPage = 10;
-        $currentItems = $reportData->slice(($currentPage - 1) * $perPage, $perPage)->values();
+        $currentItems = $displayData->slice(($currentPage - 1) * $perPage, $perPage)->values();
         $attendances = new LengthAwarePaginator(
             $currentItems, 
-            $reportData->count(), 
+            $displayData->count(), // Count from filtered data 
             $perPage, 
             $currentPage, 
             [
@@ -52,19 +58,23 @@ class LaporanController extends Controller
         );
         $attendances->appends($request->all());
 
-        // --- Permissions (Izin) Query (Maintained for separate tab) ---
-        // Keeps original logic for Izin tab
-        $permissionsQuery = Izin::with('user')
-            ->where(function($q) use ($startDate, $endDate) {
-                $q->whereBetween('tanggal_mulai', [$startDate, $endDate])
-                  ->orWhereBetween('tanggal_selesai', [$startDate, $endDate]);
-            })
-            ->orderBy('created_at', 'desc');
+        // --- Permissions (Izin) Query ---
+        $permissionsQuery = Izin::with('user')->orderBy('created_at', 'desc');
 
-        if ($search) {
-            $permissionsQuery->whereHas('user', function($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%');
+        // Apply filters only if provided in request, matching SuperAdmin behavior
+        // allowing Admin to see all permissions (e.g. future/past) by default or when clearing filters
+        if ($request->filled('search')) {
+            $permissionsQuery->whereHas('user', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%');
             });
+        }
+        
+        if ($request->filled('start_date')) {
+             $permissionsQuery->where('tanggal_mulai', '>=', $request->start_date);
+        }
+        
+        if ($request->filled('end_date')) {
+             $permissionsQuery->where('tanggal_selesai', '<=', $request->end_date);
         }
 
         $permissions = $permissionsQuery->paginate(10, ['*'], 'permissions_page')->withQueryString();
@@ -158,13 +168,23 @@ class LaporanController extends Controller
             
             // Check if we should mark as Absent
             // Condition: Date is in past OR (Date is Today AND Time > Cutoff)
-            $isPast = $date->lt(Carbon::now()->startOfDay());
-            $isLateToday = $date->isToday() && Carbon::now()->format('H:i:s') > $cutoffTime;
+            
+            // Use Asia/Makassar (WITA) for Gorontalo
+            $currentTime = Carbon::now('Asia/Makassar');
+            
+            $isPast = $date->lt($currentTime->copy()->startOfDay());
+            $isToday = $date->format('Y-m-d') === $currentTime->format('Y-m-d');
+            $isLateToday = $isToday && $currentTime->format('H:i:s') > $cutoffTime;
+            
             $shouldCheckAbsence = $isPast || $isLateToday;
 
             foreach ($users as $user) {
                 // 1. Check Existing Absensi
-                $att = $absensis->where('user_id', $user->id)->where('tanggal', $dateStr)->first();
+                $att = $absensis->first(function($item) use ($user, $dateStr) {
+                    return $item->user_id == $user->id && 
+                           \Carbon\Carbon::parse($item->tanggal)->format('Y-m-d') === $dateStr;
+                });
+                
                 if ($att) {
                     // Standardize object
                     $item = new \stdClass();
@@ -180,13 +200,18 @@ class LaporanController extends Controller
                 }
                 
                 // 2. Check Izin
-                $perm = $izins->filter(function($i) use ($dateStr, $user) {
+                $perm = $izins->first(function($i) use ($dateStr, $user) { // Use first() with closure
                     return $i->user_id == $user->id && 
-                           $i->tanggal_mulai <= $dateStr && 
-                           $i->tanggal_selesai >= $dateStr;
-                })->first();
+                           \Carbon\Carbon::parse($i->tanggal_mulai)->format('Y-m-d') <= $dateStr && 
+                           \Carbon\Carbon::parse($i->tanggal_selesai)->format('Y-m-d') >= $dateStr;
+                });
                 
                 if ($perm) {
+                   // Hide future Izin matching the user request (only show up to today)
+                   if (!$isPast && !$isToday) {
+                       continue;
+                   }
+
                    $item = new \stdClass();
                    $item->id = 'izin_' . $perm->id . '_' . $dateStr;
                    $item->user = $user;
@@ -195,6 +220,8 @@ class LaporanController extends Controller
                    $item->waktu_keluar = '-';
                    $item->status = 'Izin (' . $perm->catatan . ')';
                    $item->keterangan = $perm->keterangan;
+                   $item->tanggal_mulai = $perm->tanggal_mulai;
+                   $item->tanggal_selesai = $perm->tanggal_selesai;
                    $data->push($item);
                    continue;
                 }

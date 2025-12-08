@@ -76,12 +76,28 @@
         </table>
     @else
         @foreach($attendances->groupBy('tanggal') as $date => $group)
+            @php
+                $presensiDetailGroup = $group->filter(function($item) {
+                     return stripos($item->status, 'Izin') === false && stripos($item->status, 'Tidak Hadir') === false && stripos($item->status, 'Alpha') === false;
+                });
+                
+                $absenGroup = $group->filter(function($item) {
+                    return stripos($item->status, 'Tidak Hadir') !== false || stripos($item->status, 'Alpha') !== false;
+                });
+                
+                $izinGroup = $group->filter(function($item) {
+                    return stripos($item->status, 'Izin') !== false;
+                });
+            @endphp
+
+            {{-- 1. Table PRESENSI --}}
+            @if($presensiDetailGroup->isNotEmpty())
             <div style="margin-bottom: 10px; page-break-inside: avoid;">
                 <table style="margin-bottom: 5px;">
                     <thead>
                         <tr>
                             <th colspan="7" style="background-color: #ddd; text-align: left; padding-left: 10px;">
-                                {{ \Carbon\Carbon::parse($date)->translatedFormat('l, d F Y') }}
+                                {{ \Carbon\Carbon::parse($date)->translatedFormat('l, d F Y') }} | Presensi
                             </th>
                         </tr>
                         <tr>
@@ -95,13 +111,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($group as $index => $attendance)
+                        @foreach($presensiDetailGroup as $attendance)
                             <tr>
-                                <td class="text-center">{{ $index + 1 }}</td>
+                                <td class="text-center">{{ $loop->iteration }}</td>
                                 <td>{{ $attendance->user->name ?? '-' }}</td>
                                 <td>{{ ($attendance->user->pangkat ?? '-') . ' / ' . ($attendance->user->nrp ?? '-') }}</td>
                                 <td>{{ $attendance->user->jabatan ?? '-' }}</td>
-                                <td>{{ $attendance->waktu_masuk ?? '-' }}</td>
+                                <td>{{ ($attendance->waktu_masuk && $attendance->waktu_masuk !== '-') ? \Carbon\Carbon::parse($attendance->waktu_masuk)->format('H:i:s') : '-' }}</td>
                                 <td class="text-center">{{ $attendance->status }}</td>
                                 <td>{{ $attendance->keterangan ?? '-' }}</td>
                             </tr>
@@ -109,6 +125,87 @@
                     </tbody>
                 </table>
             </div>
+            @endif
+
+            {{-- 2. Table ABSEN --}}
+            @if($absenGroup->isNotEmpty())
+            <div style="margin-bottom: 10px; page-break-inside: avoid;">
+                <table style="margin-bottom: 5px;">
+                    <thead>
+                        <tr>
+                            <th colspan="7" style="background-color: #ffebee; text-align: left; padding-left: 10px;">
+                                {{ \Carbon\Carbon::parse($date)->translatedFormat('l, d F Y') }} | Absen
+                            </th>
+                        </tr>
+                        <tr>
+                            <th style="width: 5%">No</th>
+                            <th style="width: 20%">Nama</th>
+                            <th style="width: 15%">Pangkat / NRP</th>
+                            <th style="width: 15%">Jabatan</th>
+                            <th style="width: 15%">Jam Masuk</th>
+                            <th style="width: 10%">Status</th>
+                            <th style="width: 20%">Ket</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($absenGroup as $attendance)
+                            <tr>
+                                <td class="text-center">{{ $loop->iteration }}</td>
+                                <td>{{ $attendance->user->name ?? '-' }}</td>
+                                <td>{{ ($attendance->user->pangkat ?? '-') . ' / ' . ($attendance->user->nrp ?? '-') }}</td>
+                                <td>{{ $attendance->user->jabatan ?? '-' }}</td>
+                                <td>-</td>
+                                <td class="text-center">{{ $attendance->status }}</td>
+                                <td>{{ $attendance->keterangan ?? '-' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @endif
+
+            {{-- 3. Table IZIN --}}
+            @if($izinGroup->isNotEmpty())
+            <div style="margin-bottom: 10px; page-break-inside: avoid;">
+                <table style="margin-bottom: 5px;">
+                    <thead>
+                        <tr>
+                            <th colspan="7" style="background-color: #e3f2fd; text-align: left; padding-left: 10px;">
+                                {{ \Carbon\Carbon::parse($date)->translatedFormat('l, d F Y') }} | Izin
+                            </th>
+                        </tr>
+                        <tr>
+                            <th style="width: 5%">No</th>
+                            <th style="width: 20%">Nama</th>
+                            <th style="width: 15%">Pangkat / NRP</th>
+                            <th style="width: 15%">Jabatan</th>
+                            <th style="width: 15%">Tanggal Izin</th>
+                            <th style="width: 10%">Status</th>
+                            <th style="width: 20%">Ket</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($izinGroup as $attendance)
+                            <tr>
+                                <td class="text-center">{{ $loop->iteration }}</td>
+                                <td>{{ $attendance->user->name ?? '-' }}</td>
+                                <td>{{ ($attendance->user->pangkat ?? '-') . ' / ' . ($attendance->user->nrp ?? '-') }}</td>
+                                <td>{{ $attendance->user->jabatan ?? '-' }}</td>
+                                <td style="font-size: 10px;">
+                                    @if(isset($attendance->tanggal_mulai) && isset($attendance->tanggal_selesai))
+                                        {{ \Carbon\Carbon::parse($attendance->tanggal_mulai)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($attendance->tanggal_selesai)->format('d/m/Y') }}
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td class="text-center">{{ $attendance->status }}</td>
+                                <td>{{ $attendance->keterangan ?? '-' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @endif
         @endforeach
     @endif
 </body>

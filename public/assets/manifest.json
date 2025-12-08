@@ -1,7 +1,8 @@
 {
+  "id": "/",
   "name": "PresenTIK",
   "short_name": "PTIK",
-  "start_url": "/",
+  "start_url": "/login",
   "theme_color": "#ffffff",
   "background_color": "#ffffff",
   "display": "standalone",
@@ -40,6 +41,13 @@
     {
       "src": "/assets/icons/icon-512x512.png",
       "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/assets/screenshots/screenshot-mobile.png",
+      "sizes": "1082x2402",
       "type": "image/png"
     }
   ]

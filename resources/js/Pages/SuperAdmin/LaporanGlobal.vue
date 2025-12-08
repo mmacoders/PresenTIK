@@ -197,7 +197,7 @@
                                             </span>
                                         </td>
                                         <td class="px-6 py-3 text-gray-700">{{ formatDate(attendance.tanggal) }}</td>
-                                        <td class="px-6 py-3 text-gray-700">{{ attendance.waktu_masuk || '-' }}</td>
+                                        <td class="px-6 py-3 text-gray-700">{{ formatTime(attendance.waktu_masuk) }}</td>
                                         <td class="px-6 py-3">
                                             <span
                                                 :class="getStatusClass(attendance)"
@@ -372,6 +372,19 @@ const formatDate = (dateString) => {
     if (!dateString) return '-';
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('id-ID', options);
+};
+
+const formatTime = (timeString) => {
+    if (!timeString || timeString === '-') return '-';
+    const date = new Date(timeString);
+    // Use fallback if invalid date (e.g. simple time string "08:00:00")
+    if (isNaN(date.getTime())) return timeString;
+    return date.toLocaleTimeString('id-ID', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit', 
+        hour12: false 
+    }).replace(/\./g, ':'); // Ensure colons if id-ID uses dots
 };
 
 const getStatusText = (attendance) => {

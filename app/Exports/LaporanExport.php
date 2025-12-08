@@ -34,44 +34,86 @@ class LaporanExport implements FromCollection, WithEvents, WithCustomStartCell
         $grouped = $this->attendances->groupBy('tanggal');
         
         foreach ($grouped as $date => $items) {
-            // 1. Date Header Row
             $dateStr = Carbon::parse($date)->translatedFormat('l, d F Y');
-            $this->exportData->push([strtoupper($dateStr)]);
-            $this->dateRows[] = $rowPointer;
-            $rowPointer++;
-
-            // 2. Table Header Row
-            $this->exportData->push(['No', 'Nama', 'Pangkat / NRP', 'Jabatan', 'Jam Masuk', 'Status', 'Ket']);
-            $this->tableHeaderRows[] = $rowPointer;
-            $rowPointer++;
-
-            // 3. Data Rows
-            $no = 1;
-            foreach ($items as $item) {
-                $user = $item->user;
-                $this->exportData->push([
-                    $no,
-                    $user->name ?? '-',
-                    ($user->pangkat ?? '-') . ' / ' . ($user->nrp ?? '-'),
-                    $user->jabatan ?? '-',
-                    $item->waktu_masuk ?? '-',
-                    $item->status,
-                    $item->keterangan ?? '-',
-                ]);
-                $this->dataRows[] = $rowPointer;
-                $rowPointer++;
-                $no++;
-            }
             
-            // 4. Spacer Row
-            $this->exportData->push(['']);
-            $rowPointer++;
-        }
-    }
+            // Split into Presensi (including Absen/Alpha) and Izin
+            $presensiGroup = $items->filter(function($item) {
+                return stripos($item->status, 'Izin') === false;
+            });
+            $izinGroup = $items->filter(function($item) {
+                return stripos($item->status, 'Izin') !== false;
+            });
 
-    public function collection()
-    {
-        return $this->exportData;
+            // --- 1. Table PRESENSI & ABSEN ---
+            if ($presensiGroup->isNotEmpty()) {
+                // Header
+                $this->exportData->push([strtoupper($dateStr) . ' | PRESENSI & ABSEN']);
+                $this->dateRows[] = $rowPointer;
+                $rowPointer++;
+
+                // Table Header
+                $this->exportData->push(['No', 'Nama', 'Pangkat / NRP', 'Jabatan', 'Jam Masuk', 'Status', 'Ket']);
+                $this->tableHeaderRows[] = $rowPointer;
+                $rowPointer++;
+
+                // Data Rows
+                $no = 1;
+                foreach ($presensiGroup as $item) {
+                    $user = $item->user;
+                    $this->exportData->push([
+                        $no,
+                        $user->name ?? '-',
+                        ($user->pangkat ?? '-') . ' / ' . ($user->nrp ?? '-'),
+                        $user->jabatan ?? '-',
+                        ($item->waktu_masuk && $item->waktu_masuk !== '-') ? Carbon::parse($item->waktu_masuk)->format('H:i:s') : '-',
+                        $item->status,
+                        $item->keterangan ?? '-',
+                    ]);
+                    $this->dataRows[] = $rowPointer;
+                    $rowPointer++;
+                    $no++;
+                }
+                
+                // Spacer
+                $this->exportData->push(['']);
+                $rowPointer++;
+            }
+
+            // --- 2. Table IZIN ---
+            if ($izinGroup->isNotEmpty()) {
+                // Header
+                $this->exportData->push([strtoupper($dateStr) . ' | IZIN']);
+                $this->dateRows[] = $rowPointer;
+                $rowPointer++;
+
+                // Table Header
+                $this->exportData->push(['No', 'Nama', 'Pangkat / NRP', 'Jabatan', 'Jam Masuk', 'Status', 'Ket']);
+                $this->tableHeaderRows[] = $rowPointer;
+                $rowPointer++;
+
+                // Data Rows
+                $no = 1;
+                foreach ($izinGroup as $item) {
+                    $user = $item->user;
+                    $this->exportData->push([
+                        $no,
+                        $user->name ?? '-',
+                        ($user->pangkat ?? '-') . ' / ' . ($user->nrp ?? '-'),
+                        $user->jabatan ?? '-',
+                        '-',
+                        $item->status,
+                        $item->keterangan ?? '-',
+                    ]);
+                    $this->dataRows[] = $rowPointer;
+                    $rowPointer++;
+                    $no++;
+                }
+                
+                // Spacer
+                $this->exportData->push(['']);
+                $rowPointer++;
+            }
+        }
     }
 
     public function startCell(): string

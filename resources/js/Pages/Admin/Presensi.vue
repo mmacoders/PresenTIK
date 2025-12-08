@@ -283,6 +283,7 @@
               @change="handleFileChange"
               accept=".pdf,.jpg,.jpeg,.png"
               class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors duration-200 shadow-sm"
+              required
             />
             <p class="text-xs text-gray-500 mt-1">Unggah dokumen pendukung untuk izin (maks. 2MB)</p>
           </div>
