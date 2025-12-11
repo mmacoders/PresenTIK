@@ -222,7 +222,7 @@
                                         -
                                     @endif
                                 </td>
-                                <td class="text-center">{{ $attendance->status }}</td>
+                                <td class="text-center">Izin {{ $attendance->kategori_izin ? '('.$attendance->kategori_izin.')' : '' }}</td>
                                 <td>{{ $attendance->keterangan ?? '-' }}</td>
                             </tr>
                         @endforeach

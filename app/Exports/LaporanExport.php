@@ -147,7 +147,7 @@ class LaporanExport implements FromCollection, WithEvents, WithCustomStartCell
                         $roleLabel,
                         ($user->pangkat ?? '-') . ' / ' . ($user->nrp ?? '-'),
                         $user->jabatan ?? '-',
-                        $item->status,      // Status = "Izin"
+                        "Izin " . ($item->kategori_izin ? "(" . $item->kategori_izin . ")" : ""),      // Status = "Izin (Category)"
                         $tanggalRange,      // Tanggal izin rentang
                         $item->keterangan ?? '-'
                     ]);
