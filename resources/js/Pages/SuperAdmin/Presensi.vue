@@ -75,48 +75,7 @@
               </button>
             </div>
 
-            <!-- Location Info -->
-            <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 mt-auto">
-              <h3 class="font-semibold text-gray-900 mb-3 flex items-center">
-                <MapPinIcon class="w-5 h-5 mr-2 text-red-600" />
-                Informasi Lokasi
-              </h3>
-              
-              <div class="space-y-3">
-                <div>
-                  <div class="text-sm text-gray-600 mb-1">Status Lokasi Anda:</div>
-                  <div class="flex items-center">
-                    <div v-if="gettingLocation" class="flex items-center text-gray-500">
-                      <Loader2Icon class="w-4 h-4 mr-2 animate-spin" />
-                      Mendeteksi lokasi...
-                    </div>
-                    <div v-else-if="currentLocation" :class="isWithinOfficeRadius ? 'text-green-600' : 'text-red-600'" class="flex items-center font-medium">
-                      <component :is="isWithinOfficeRadius ? CheckCircleIcon : XCircleIcon" class="w-5 h-5 mr-2" />
-                      {{ isWithinOfficeRadius ? 'Dalam Radius Kantor' : 'Diluar Radius Kantor' }}
-                    </div>
-                    <div v-else class="text-red-500">Lokasi tidak terdeteksi</div>
-                  </div>
-                </div>
-                
-                <div class="h-32 bg-gray-200 rounded-lg overflow-hidden relative">
-                  <div ref="mapContainer" class="w-full h-full z-0"></div>
-                </div>
 
-                <!-- Toggle Button for Radius Validation -->
-                <div class="pt-2 border-t border-gray-200">
-                  <button
-                    @click="toggleLocationValidation"
-                    class="w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center"
-                    :class="locationValidationDisabled 
-                      ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                      : 'bg-red-100 text-red-700 hover:bg-red-200'"
-                  >
-                    <component :is="locationValidationDisabled ? ToggleLeftIcon : ToggleRightIcon" class="w-4 h-4 mr-2" />
-                    {{ locationValidationDisabled ? 'Aktifkan Validasi Radius' : 'Nonaktifkan Validasi Radius' }}
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
 
           <!-- Leave Request Card -->
@@ -163,6 +122,67 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Location Information Card -->
+        <div class="mb-8 bg-white rounded-2xl shadow-lg border-t-4 border-red-600 p-6">
+            <div class="flex items-center mb-6">
+              <div class="p-3 rounded-xl bg-gray-50 mr-4">
+                <MapPinIcon class="w-8 h-8 text-red-600" />
+              </div>
+              <div>
+                <h2 class="text-xl font-bold text-gray-900">Informasi Lokasi</h2>
+                <p class="text-gray-600">Detail lokasi kantor dan posisi Anda</p>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+               <div class="space-y-4">
+                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <div class="text-sm text-gray-600 mb-1">Lokasi Kantor</div>
+                    <div class="font-medium text-lg text-gray-900">{{ officeLocation.lat }}, {{ officeLocation.lng }}</div>
+                 </div>
+                 
+                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <div class="text-sm text-gray-600 mb-1">Radius Presensi</div>
+                    <div class="font-medium text-lg text-gray-900">{{ attendanceRadius }} meter</div>
+                 </div>
+
+                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <div class="text-sm text-gray-600 mb-1">Lokasi Anda</div>
+                    <div v-if="currentLocation">
+                         <div class="font-medium text-lg text-gray-900 mb-2">{{ currentLocation.lat }}, {{ currentLocation.lng }}</div>
+                         <div class="flex items-center" :class="isWithinOfficeRadius ? 'text-green-600' : 'text-red-600'">
+                             <component :is="isWithinOfficeRadius ? CheckCircleIcon : XCircleIcon" class="w-5 h-5 mr-2" />
+                             <span class="font-medium">{{ isWithinOfficeRadius ? 'Dalam Radius Kantor' : 'Diluar Radius Kantor' }}</span>
+                         </div>
+                    </div>
+                     <div v-else class="text-red-500 flex items-center py-2">
+                        <Loader2Icon v-if="gettingLocation" class="w-5 h-5 mr-2 animate-spin" />
+                        {{ gettingLocation ? 'Mendeteksi lokasi...' : 'Lokasi tidak terdeteksi' }}
+                    </div>
+                 </div>
+                 
+                 <!-- Toggle Button -->
+                  <div class="pt-2">
+                    <button
+                      @click="toggleLocationValidation"
+                      class="w-full px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 flex items-center justify-center shadow-sm"
+                      :class="locationValidationDisabled 
+                        ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                        : 'bg-red-100 text-red-700 hover:bg-red-200'"
+                    >
+                      <component :is="locationValidationDisabled ? ToggleLeftIcon : ToggleRightIcon" class="w-5 h-5 mr-2" />
+                      {{ locationValidationDisabled ? 'Validasi Radius: NONAKTIF' : 'Validasi Radius: AKTIF' }}
+                    </button>
+                    <p class="text-xs text-center mt-2 text-gray-500">{{ locationValidationDisabled ? 'Anda dapat melakukan presensi dari mana saja' : 'Anda hanya dapat melakukan presensi di dalam radius kantor' }}</p>
+                  </div>
+               </div>
+               
+               <div class="h-80 bg-gray-100 rounded-xl overflow-hidden border border-gray-200 relative shadow-inner">
+                  <div ref="mapContainer" class="w-full h-full z-0"></div>
+               </div>
+            </div>
         </div>
 
         <!-- Recent Attendance History -->

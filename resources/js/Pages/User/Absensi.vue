@@ -137,7 +137,15 @@
                 </div>
                 
                 <div class="mb-4 flex-1">
-                  <p class="text-gray-600 text-sm">Ajukan izin jika tidak dapat hadir hari ini:</p>
+                  <div v-if="todayIzin" class="p-4 rounded-xl border mb-3" :class="getIzinStatusClass(todayIzin)">
+                      <h3 class="font-bold text-sm uppercase mb-1 flex items-center">
+                          <InfoIcon class="w-4 h-4 mr-2" />
+                          {{ getIzinStatusTitle(todayIzin) }}
+                      </h3>
+                      <p class="text-sm font-medium">{{ getIzinStatusText(todayIzin) }}</p>
+                      <p v-if="todayIzin.keterangan" class="text-xs mt-2 opacity-75">"{{ todayIzin.keterangan }}"</p>
+                  </div>
+                  <p v-else class="text-gray-600 text-sm">Ajukan izin jika tidak dapat hadir hari ini:</p>
                 </div>
                 
                 <div class="mt-auto">
@@ -598,7 +606,6 @@ const isWithinOfficeRadius = computed(() => {
   // Haversine formula
   const deltaLat = radLat2 - radLat1;
   const deltaLng = radLng2 - radLng1;
-  
   const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
             Math.cos(radLat1) * Math.cos(radLat2) *
             Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
@@ -611,9 +618,28 @@ const isWithinOfficeRadius = computed(() => {
   // Calculate distance
   const distance = earthRadius * c;
   
-  // Valid if within specified radius
-  return distance <= radius;
+  return distance <= radius; // Use calculated radius
 });
+
+const getIzinStatusTitle = (izin) => {
+  if (izin.status === 'approved') return 'Izin Disetujui';
+  if (izin.status === 'rejected') return 'Izin Ditolak';
+  return 'Menunggu Persetujuan';
+};
+
+const getIzinStatusText = (izin) => {
+    if (izin.status === 'approved') return 'Pengajuan izin Anda telah disetujui.';
+    if (izin.status === 'rejected') return 'Maaf, pengajuan izin Anda ditolak.';
+    return 'Pengajuan izin Anda sedang diproses.';
+};
+
+const getIzinStatusClass = (izin) => {
+    if (izin.status === 'approved') return 'bg-green-50 border-green-200 text-green-800';
+    if (izin.status === 'rejected') return 'bg-red-50 border-red-200 text-red-800';
+    return 'bg-yellow-50 border-yellow-200 text-yellow-800';
+};
+  
+
 
 // Get current location
 const getCurrentLocation = () => {

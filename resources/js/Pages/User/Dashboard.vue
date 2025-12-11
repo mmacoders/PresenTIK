@@ -410,14 +410,13 @@ const combinedHistory = computed(() => {
             item.type === 'attendance' && item.date === dateStr
           );
           
-          // Only add izin if there's no attendance record (to avoid duplicates)
-          if (!hasAttendance) {
-            combined.push({
-              type: 'izin',
-              date: dateStr,
-              data: izin
-            });
-          }
+          
+          // Add izin record regardless of attendance to ensure status visibility
+          combined.push({
+            type: 'izin',
+            date: dateStr,
+            data: izin
+          });
         }
       }
     });

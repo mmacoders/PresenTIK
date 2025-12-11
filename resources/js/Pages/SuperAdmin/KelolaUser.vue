@@ -209,6 +209,9 @@
                         >
                           <KeyIcon class="h-5 w-5" />
                         </button>
+                        <button @click="openDeleteModal(admin)" class="text-gray-600 hover:text-gray-800 p-1 rounded transition-all duration-300" title="Hapus">
+                          <TrashIcon class="h-5 w-5" />
+                        </button>
                       </div>
                     </td>
                   </tr>
