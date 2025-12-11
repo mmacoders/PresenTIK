@@ -134,11 +134,18 @@ class IzinController extends Controller
             ]);
             
             // Admin can update any izin
-            $izin->update([
+            $updateData = [
                 'status' => $request->status,
                 'disetujui_oleh' => Auth::user()->name,
-                'catatan' => $request->catatan,
-            ]);
+            ];
+
+            // Only update catatan if status is rejected (as rejection reason)
+            // Preserves the existing category (catatan) when approved
+            if ($request->status === 'rejected') {
+                $updateData['catatan'] = $request->catatan;
+            }
+
+            $izin->update($updateData);
             
             return redirect()->back()->with('success', 'Status permintaan izin berhasil diperbarui.');
         }

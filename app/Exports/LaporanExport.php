@@ -129,7 +129,7 @@ class LaporanExport implements FromCollection, WithEvents, WithCustomStartCell
                     
                     // Map Role
                     $roleLabel = $user->role;
-                    if ($roleLabel === 'user') $roleLabel = 'User';
+                    if ($roleLabel === 'user' || $roleLabel === 'pegawai') $roleLabel = 'User';
                     elseif ($roleLabel === 'admin') $roleLabel = 'Admin';
                     elseif ($roleLabel === 'superadmin') $roleLabel = 'SuperAdmin';
 
@@ -147,7 +147,7 @@ class LaporanExport implements FromCollection, WithEvents, WithCustomStartCell
                         $roleLabel,
                         ($user->pangkat ?? '-') . ' / ' . ($user->nrp ?? '-'),
                         $user->jabatan ?? '-',
-                        "Izin " . ($item->kategori_izin ? "(" . $item->kategori_izin . ")" : ""),      // Status = "Izin (Category)"
+                        $item->status,      // Status from controller
                         $tanggalRange,      // Tanggal izin rentang
                         $item->keterangan ?? '-'
                     ]);

@@ -194,6 +194,7 @@ class LaporanController extends Controller
                     $item->waktu_masuk = $att->waktu_masuk;
                     $item->waktu_keluar = $att->waktu_keluar;
                     $item->status = $this->formatStatus($att->status);
+                    $item->catatan = null;
                     $item->keterangan = $att->keterangan;
                     $data->push($item);
                     continue;
@@ -218,7 +219,8 @@ class LaporanController extends Controller
                    $item->tanggal = $dateStr;
                    $item->waktu_masuk = '-';
                    $item->waktu_keluar = '-';
-                   $item->status = 'Izin (' . $perm->catatan . ')';
+                   $item->status = 'Izin' . ($perm->catatan ? ' (' . $perm->catatan . ')' : '');
+                   $item->catatan = $perm->catatan;
                    $item->keterangan = $perm->keterangan;
                    $item->tanggal_mulai = $perm->tanggal_mulai;
                    $item->tanggal_selesai = $perm->tanggal_selesai;
@@ -235,6 +237,7 @@ class LaporanController extends Controller
                    $item->waktu_masuk = '-';
                    $item->waktu_keluar = '-';
                    $item->status = 'Tidak Hadir (Alpha)';
+                   $item->catatan = null;
                    $item->keterangan = '-';
                    $data->push($item);
                 }

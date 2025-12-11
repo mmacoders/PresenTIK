@@ -504,8 +504,9 @@ const fetchPage = (url) => {
 const getRoleText = (role) => {
     const roleMap = {
         'user': 'User',
+        'pegawai': 'User',
         'admin': 'Admin',
-        'superadmin': 'Super Admin'
+        'superadmin': 'SuperAdmin'
     };
     return roleMap[role] || role;
 };

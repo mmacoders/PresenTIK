@@ -488,11 +488,12 @@ const getRoleText = (role) => {
     if (!role) return '-';
     switch (role.toLowerCase()) {
         case 'superadmin':
-            return 'Super Admin';
+            return 'SuperAdmin';
         case 'admin':
             return 'Admin';
         case 'user':
-            return 'Pegawai';
+        case 'pegawai':
+            return 'User';
         default:
             return role;
     }

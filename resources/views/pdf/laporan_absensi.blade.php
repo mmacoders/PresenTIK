@@ -115,7 +115,7 @@
                         @foreach($presensiDetailGroup as $attendance)
                             @php
                                 $roleLabel = $attendance->user->role;
-                                if ($roleLabel === 'user') $roleLabel = 'User';
+                                if ($roleLabel === 'user' || $roleLabel === 'pegawai') $roleLabel = 'User';
                                 elseif ($roleLabel === 'admin') $roleLabel = 'Admin';
                                 elseif ($roleLabel === 'superadmin') $roleLabel = 'SuperAdmin';
                             @endphp
@@ -160,7 +160,7 @@
                         @foreach($absenGroup as $attendance)
                             @php
                                 $roleLabel = $attendance->user->role;
-                                if ($roleLabel === 'user') $roleLabel = 'User';
+                                if ($roleLabel === 'user' || $roleLabel === 'pegawai') $roleLabel = 'User';
                                 elseif ($roleLabel === 'admin') $roleLabel = 'Admin';
                                 elseif ($roleLabel === 'superadmin') $roleLabel = 'SuperAdmin';
                             @endphp
@@ -205,7 +205,7 @@
                         @foreach($izinGroup as $attendance)
                             @php
                                 $roleLabel = $attendance->user->role;
-                                if ($roleLabel === 'user') $roleLabel = 'User';
+                                if ($roleLabel === 'user' || $roleLabel === 'pegawai') $roleLabel = 'User';
                                 elseif ($roleLabel === 'admin') $roleLabel = 'Admin';
                                 elseif ($roleLabel === 'superadmin') $roleLabel = 'SuperAdmin';
                             @endphp
@@ -222,7 +222,7 @@
                                         -
                                     @endif
                                 </td>
-                                <td class="text-center">Izin {{ $attendance->kategori_izin ? '('.$attendance->kategori_izin.')' : '' }}</td>
+                                <td class="text-center">{{ $attendance->status }}</td>
                                 <td>{{ $attendance->keterangan ?? '-' }}</td>
                             </tr>
                         @endforeach
