@@ -96,25 +96,33 @@
                 <table style="margin-bottom: 5px;">
                     <thead>
                         <tr>
-                            <th colspan="7" style="background-color: #ddd; text-align: left; padding-left: 10px;">
+                            <th colspan="8" style="background-color: #ddd; text-align: left; padding-left: 10px;">
                                 {{ \Carbon\Carbon::parse($date)->translatedFormat('l, d F Y') }} | Presensi
                             </th>
                         </tr>
                         <tr>
                             <th style="width: 5%">No</th>
                             <th style="width: 20%">Nama</th>
+                            <th style="width: 10%">Role</th>
                             <th style="width: 15%">Pangkat / NRP</th>
                             <th style="width: 15%">Jabatan</th>
-                            <th style="width: 15%">Jam Masuk</th>
+                            <th style="width: 10%">Jam Masuk</th>
                             <th style="width: 10%">Status</th>
-                            <th style="width: 20%">Ket</th>
+                            <th style="width: 15%">Ket</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($presensiDetailGroup as $attendance)
+                            @php
+                                $roleLabel = $attendance->user->role;
+                                if ($roleLabel === 'user') $roleLabel = 'User';
+                                elseif ($roleLabel === 'admin') $roleLabel = 'Admin';
+                                elseif ($roleLabel === 'superadmin') $roleLabel = 'SuperAdmin';
+                            @endphp
                             <tr>
                                 <td class="text-center">{{ $loop->iteration }}</td>
                                 <td>{{ $attendance->user->name ?? '-' }}</td>
+                                <td class="text-center">{{ $roleLabel }}</td>
                                 <td>{{ ($attendance->user->pangkat ?? '-') . ' / ' . ($attendance->user->nrp ?? '-') }}</td>
                                 <td>{{ $attendance->user->jabatan ?? '-' }}</td>
                                 <td>{{ ($attendance->waktu_masuk && $attendance->waktu_masuk !== '-') ? \Carbon\Carbon::parse($attendance->waktu_masuk)->format('H:i:s') : '-' }}</td>
@@ -133,25 +141,33 @@
                 <table style="margin-bottom: 5px;">
                     <thead>
                         <tr>
-                            <th colspan="7" style="background-color: #ffebee; text-align: left; padding-left: 10px;">
+                            <th colspan="8" style="background-color: #ffebee; text-align: left; padding-left: 10px;">
                                 {{ \Carbon\Carbon::parse($date)->translatedFormat('l, d F Y') }} | Absen
                             </th>
                         </tr>
                         <tr>
                             <th style="width: 5%">No</th>
                             <th style="width: 20%">Nama</th>
+                            <th style="width: 10%">Role</th>
                             <th style="width: 15%">Pangkat / NRP</th>
                             <th style="width: 15%">Jabatan</th>
-                            <th style="width: 15%">Jam Masuk</th>
+                            <th style="width: 10%">Jam Masuk</th>
                             <th style="width: 10%">Status</th>
-                            <th style="width: 20%">Ket</th>
+                            <th style="width: 15%">Ket</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($absenGroup as $attendance)
+                            @php
+                                $roleLabel = $attendance->user->role;
+                                if ($roleLabel === 'user') $roleLabel = 'User';
+                                elseif ($roleLabel === 'admin') $roleLabel = 'Admin';
+                                elseif ($roleLabel === 'superadmin') $roleLabel = 'SuperAdmin';
+                            @endphp
                             <tr>
                                 <td class="text-center">{{ $loop->iteration }}</td>
                                 <td>{{ $attendance->user->name ?? '-' }}</td>
+                                <td class="text-center">{{ $roleLabel }}</td>
                                 <td>{{ ($attendance->user->pangkat ?? '-') . ' / ' . ($attendance->user->nrp ?? '-') }}</td>
                                 <td>{{ $attendance->user->jabatan ?? '-' }}</td>
                                 <td>-</td>
@@ -170,25 +186,33 @@
                 <table style="margin-bottom: 5px;">
                     <thead>
                         <tr>
-                            <th colspan="7" style="background-color: #e3f2fd; text-align: left; padding-left: 10px;">
+                            <th colspan="8" style="background-color: #e3f2fd; text-align: left; padding-left: 10px;">
                                 {{ \Carbon\Carbon::parse($date)->translatedFormat('l, d F Y') }} | Izin
                             </th>
                         </tr>
                         <tr>
                             <th style="width: 5%">No</th>
                             <th style="width: 20%">Nama</th>
+                            <th style="width: 10%">Role</th>
                             <th style="width: 15%">Pangkat / NRP</th>
                             <th style="width: 15%">Jabatan</th>
                             <th style="width: 15%">Tanggal Izin</th>
                             <th style="width: 10%">Status</th>
-                            <th style="width: 20%">Ket</th>
+                            <th style="width: 10%">Ket</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($izinGroup as $attendance)
+                            @php
+                                $roleLabel = $attendance->user->role;
+                                if ($roleLabel === 'user') $roleLabel = 'User';
+                                elseif ($roleLabel === 'admin') $roleLabel = 'Admin';
+                                elseif ($roleLabel === 'superadmin') $roleLabel = 'SuperAdmin';
+                            @endphp
                             <tr>
                                 <td class="text-center">{{ $loop->iteration }}</td>
                                 <td>{{ $attendance->user->name ?? '-' }}</td>
+                                <td class="text-center">{{ $roleLabel }}</td>
                                 <td>{{ ($attendance->user->pangkat ?? '-') . ' / ' . ($attendance->user->nrp ?? '-') }}</td>
                                 <td>{{ $attendance->user->jabatan ?? '-' }}</td>
                                 <td style="font-size: 10px;">

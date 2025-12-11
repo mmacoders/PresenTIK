@@ -72,6 +72,7 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
     Route::delete('/superadmin/admin/{user}', [SuperAdminAdminController::class, 'destroy'])->name('superadmin.admin.destroy');
     Route::patch('/superadmin/admin/{user}/toggle-status', [SuperAdminAdminController::class, 'toggleStatus'])->name('superadmin.admin.toggle-status');
     Route::patch('/superadmin/admin/{user}/transfer', [SuperAdminAdminController::class, 'transfer'])->name('superadmin.admin.transfer');
+    Route::patch('/superadmin/admin/{user}/reset-password', [SuperAdminAdminController::class, 'resetPassword'])->name('superadmin.admin.reset-password');
     
     // User Management (Combined Pegawai & Admin)
     Route::get('/superadmin/users', [App\Http\Controllers\SuperAdmin\KelolaUserController::class, 'index'])->name('superadmin.users');

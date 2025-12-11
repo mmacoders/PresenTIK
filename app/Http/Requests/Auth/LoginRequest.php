@@ -50,6 +50,16 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        $user = Auth::user();
+        // Check for both 'inactive' (English) and 'nonaktif' (Indonesian) status
+        if (in_array($user->status, ['inactive', 'nonaktif'])) {
+            Auth::logout();
+            
+            throw ValidationException::withMessages([
+                'nrp' => 'Akun anda telah dinonaktifkan. Silahkan hubungi administrator.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

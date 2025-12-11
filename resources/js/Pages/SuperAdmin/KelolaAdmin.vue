@@ -137,6 +137,13 @@
                           <EditIcon class="h-5 w-5" />
                         </button>
                         <button 
+                          @click="openResetPasswordModal(admin)"
+                          class="text-orange-600 hover:text-orange-800 p-1 rounded transition-all duration-300"
+                          title="Reset Password"
+                        >
+                          <KeyIcon class="h-5 w-5" />
+                        </button>
+                        <button 
                           @click="openDeleteModal(admin)"
                           class="text-gray-600 hover:text-gray-800 p-1 rounded transition-all duration-300"
                           title="Hapus"
@@ -430,6 +437,18 @@
         @close="showDeleteModal = false"
         @confirm="confirmDelete"
       />
+
+      <!-- Reset Password Confirmation Modal -->
+      <ConfirmModal
+        :open="showResetPasswordModal"
+        title="Reset Password Admin"
+        message="Apakah Anda yakin ingin mereset password admin ini menjadi default ('password')? Tindakan ini tidak dapat dibatalkan."
+        type="warning"
+        confirm-text="Reset Password"
+        cancel-text="Batal"
+        @close="showResetPasswordModal = false"
+        @confirm="confirmResetPassword"
+      />
     </div>
   </div>
 </template>
@@ -457,7 +476,8 @@ import {
   UsersIcon,
   UserIcon,
   XIcon,
-  LockIcon
+  LockIcon,
+  KeyIcon
 } from 'lucide-vue-next';
 import debounce from 'lodash/debounce';
 
@@ -474,10 +494,12 @@ const showCreateModal = ref(false);
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 const showDetailModal = ref(false);
+const showResetPasswordModal = ref(false);
 
 const editingAdmin = ref(null);
 const detailAdmin = ref({});
 const adminToDelete = ref(null);
+const adminToResetPassword = ref(null);
 
 // Search and pagination state
 const searchQuery = ref('');
@@ -647,12 +669,31 @@ const confirmDelete = () => {
   }
 };
 
+const openResetPasswordModal = (admin) => {
+  adminToResetPassword.value = admin;
+  showResetPasswordModal.value = true;
+};
+
+const confirmResetPassword = () => {
+  if (adminToResetPassword.value) {
+    router.patch(route('superadmin.admin.reset-password', adminToResetPassword.value.id), {}, {
+      onSuccess: () => {
+        showResetPasswordModal.value = false;
+        adminToResetPassword.value = null;
+      }
+    });
+  }
+};
+
+
 const closeModal = () => {
   showCreateModal.value = false;
   showEditModal.value = false;
   showDeleteModal.value = false;
+  showResetPasswordModal.value = false;
   editingAdmin.value = null;
   adminToDelete.value = null;
+  adminToResetPassword.value = null;
   adminForm.reset();
 };
 
