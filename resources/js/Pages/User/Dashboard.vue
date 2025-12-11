@@ -171,7 +171,14 @@
                    </thead>
                    <tbody class="divide-y divide-gray-100">
                       <tr v-for="(item, index) in combinedHistory" :key="`history-${index}`" class="hover:bg-gray-50">
-                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ formatDate(item.date) }}</td>
+                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                             <template v-if="item.isRange">
+                                 {{ formatDate(item.data.tanggal_mulai) }} - {{ formatDate(item.data.tanggal_selesai) }}
+                             </template>
+                             <template v-else>
+                                 {{ formatDate(item.date) }}
+                             </template>
+                         </td>
                          <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-600">
                            <template v-if="item.type === 'attendance'">
                              {{ item.data.waktu_masuk || '-' }}
@@ -399,25 +406,16 @@ const combinedHistory = computed(() => {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       
-      // Loop through each day of the izin period
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        // Only add if within the last 7 days
-        if (d >= sevenDaysAgo) {
-          const dateStr = d.toISOString().split('T')[0];
-          
-          // Check if there's already an attendance record for this date
-          const hasAttendance = combined.some(item => 
-            item.type === 'attendance' && item.date === dateStr
-          );
-          
-          
-          // Add izin record regardless of attendance to ensure status visibility
+      // Check if the leave range overlaps with the reporting period (last 7 days to today)
+      // We want to show the leave record IF it ends on or after 7 days ago.
+      if (endDate >= sevenDaysAgo) {
+          // Push a single record for the entire leave period
           combined.push({
             type: 'izin',
-            date: dateStr,
+            date: izin.tanggal_mulai, // Use start date for sorting
+            isRange: true, // Identify as a range for the template
             data: izin
           });
-        }
       }
     });
   }

@@ -94,6 +94,7 @@
                    <thead class="bg-gray-50">
                       <tr>
                          <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nama</th>
+                         <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Tanggal</th>
                          <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Jam Masuk</th>
                          <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
                          <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Keterangan</th>
@@ -102,6 +103,7 @@
                    <tbody class="divide-y divide-gray-100">
                       <tr v-for="(person, index) in attendanceData" :key="index" class="hover:bg-gray-50">
                          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ person.name }}</td>
+                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ person.dateDisplay }}</td>
                          <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-600">{{ person.checkIn }}</td>
                          <td class="px-6 py-4 whitespace-nowrap">
                             <span :class="getStatusClass(person.status)" class="px-2 py-1 inline-flex text-xs leading-5 font-bold rounded uppercase">
@@ -111,7 +113,7 @@
                          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs">{{ person.keterangan }}</td>
                       </tr>
                       <tr v-if="!attendanceData || attendanceData.length === 0">
-                         <td colspan="4" class="px-6 py-8 text-center text-gray-500 text-sm">
+                         <td colspan="5" class="px-6 py-8 text-center text-gray-500 text-sm">
                             Tidak ada data presensi hari ini
                          </td>
                       </tr>

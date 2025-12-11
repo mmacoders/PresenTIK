@@ -115,11 +115,34 @@ class DashboardController extends Controller
                 if ($leave->jenis_izin === 'sakit') $status = 'Sakit';
                 if ($leave->jenis_izin === 'cuti') $status = 'Cuti';
                 if ($leave->jenis_izin === 'parsial') $status = 'Izin Parsial';
+                
+                // Append category if available (e.g. "Izin (Sakit)", "Izin (Lainnya)")
+                if ($leave->catatan) {
+                    $status .= ' (' . $leave->catatan . ')';
+                }
+                
                 $keterangan = $leave->alasan ?? '-';
+            }
+            
+            // Determine displayed date (Range for leave, single date for attendance/absent)
+            $dateDisplay = Carbon::now()->translatedFormat('d M Y');
+            
+            if ($leave) {
+                $start = Carbon::parse($leave->tanggal_mulai)->translatedFormat('d M');
+                $end = Carbon::parse($leave->tanggal_selesai)->translatedFormat('d M Y');
+                
+                if ($leave->tanggal_mulai === $leave->tanggal_selesai) {
+                    $dateDisplay = Carbon::parse($leave->tanggal_mulai)->translatedFormat('d M Y');
+                } else {
+                    $dateDisplay = "$start - $end";
+                }
+            } elseif ($attendance) {
+                 $dateDisplay = Carbon::parse($attendance->tanggal)->translatedFormat('d M Y');
             }
             
             $data[] = [
                 'name' => $user->name,
+                'dateDisplay' => $dateDisplay,
                 'checkIn' => $checkIn,
                 'checkOut' => $checkOut,
                 'status' => $status,

@@ -151,10 +151,14 @@
                 <div class="mt-auto">
                   <button 
                     @click="showPermissionModal = true"
-                    class="w-full py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200 font-semibold flex items-center justify-center"
+                    :disabled="todayIzin && (todayIzin.status === 'pending' || todayIzin.status === 'approved' || todayIzin.status === 'disetujui')"
+                    class="w-full py-4 rounded-xl transition-colors duration-200 font-semibold flex items-center justify-center"
+                    :class="todayIzin && (todayIzin.status === 'pending' || todayIzin.status === 'approved' || todayIzin.status === 'disetujui') 
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                      : 'bg-blue-600 text-white hover:bg-blue-700'"
                   >
                     <PlusIcon class="w-5 h-5 mr-2" />
-                    Ajukan Izin
+                    {{ todayIzin && (todayIzin.status === 'pending' || todayIzin.status === 'approved' || todayIzin.status === 'disetujui') ? 'Izin Telah Diajukan' : 'Ajukan Izin' }}
                   </button>
                 </div>
               </div>

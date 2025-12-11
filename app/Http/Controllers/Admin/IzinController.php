@@ -141,8 +141,9 @@ class IzinController extends Controller
 
             // Only update catatan if status is rejected (as rejection reason)
             // Preserves the existing category (catatan) when approved
-            if ($request->status === 'rejected') {
-                $updateData['catatan'] = $request->catatan;
+            if ($request->status === 'rejected' && $request->filled('catatan')) {
+                // Append rejection reason to keterangan to preserve category in catatan
+                $updateData['keterangan'] = $izin->keterangan . ' (Alasan Penolakan: ' . $request->catatan . ')';
             }
 
             $izin->update($updateData);

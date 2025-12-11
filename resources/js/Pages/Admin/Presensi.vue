@@ -95,15 +95,15 @@
               
               <button 
                 @click="showPermissionModal = true"
-                :disabled="todayAttendance && todayAttendance.waktu_masuk && todayAttendance.waktu_masuk !== '-'"
-                :title="todayAttendance && todayAttendance.waktu_masuk && todayAttendance.waktu_masuk !== '-' ? 'Anda sudah melakukan presensi hari ini' : 'Ajukan Izin'"
+                :disabled="(todayAttendance && todayAttendance.waktu_masuk && todayAttendance.waktu_masuk !== '-') || (todayIzin && (todayIzin.status === 'pending' || todayIzin.status === 'approved' || todayIzin.status === 'disetujui'))"
+                :title="(todayAttendance && todayAttendance.waktu_masuk && todayAttendance.waktu_masuk !== '-') ? 'Anda sudah melakukan presensi hari ini' : ((todayIzin && (todayIzin.status === 'pending' || todayIzin.status === 'approved' || todayIzin.status === 'disetujui')) ? 'Izin Telah Diajukan' : 'Ajukan Izin')"
                 class="w-full py-4 rounded-xl transition-all duration-200 font-semibold flex items-center justify-center text-lg shadow-md hover:shadow-lg"
-                :class="todayAttendance && todayAttendance.waktu_masuk && todayAttendance.waktu_masuk !== '-' 
+                :class="((todayAttendance && todayAttendance.waktu_masuk && todayAttendance.waktu_masuk !== '-') || (todayIzin && (todayIzin.status === 'pending' || todayIzin.status === 'approved' || todayIzin.status === 'disetujui'))) 
                   ? 'bg-gray-400 text-white cursor-not-allowed opacity-75' 
                   : 'bg-blue-600 text-white hover:bg-blue-700'"
               >
                 <PlusIcon class="w-6 h-6 mr-2" />
-                Ajukan Izin
+                {{ (todayIzin && (todayIzin.status === 'pending' || todayIzin.status === 'approved' || todayIzin.status === 'disetujui')) ? 'Izin Telah Diajukan' : 'Ajukan Izin' }}
               </button>
             </div>
 
