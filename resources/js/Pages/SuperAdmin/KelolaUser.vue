@@ -202,8 +202,12 @@
                         >
                           <PowerIcon class="h-5 w-5" />
                         </button>
-                        <button @click="openDeleteModal(admin)" class="text-gray-600 hover:text-gray-800 p-1 rounded transition-all duration-300" title="Hapus">
-                          <TrashIcon class="h-5 w-5" />
+                        <button 
+                          @click="openResetPasswordModal(admin)"
+                          class="text-orange-600 hover:text-orange-800 p-1 rounded transition-all duration-300"
+                          title="Reset Password"
+                        >
+                          <KeyIcon class="h-5 w-5" />
                         </button>
                       </div>
                     </td>
@@ -475,6 +479,18 @@
         @confirm="confirmDelete"
       />
 
+       <!-- Reset Password Confirmation Modal -->
+      <ConfirmModal
+        :open="showResetPasswordModal"
+        title="Reset Password Admin"
+        message="Apakah Anda yakin ingin mereset password admin ini menjadi default ('password')? Tindakan ini tidak dapat dibatalkan."
+        type="warning"
+        confirm-text="Reset Password"
+        cancel-text="Batal"
+        @close="showResetPasswordModal = false"
+        @confirm="confirmResetPassword"
+      />
+
     </div>
   </div>
 </template>
@@ -501,7 +517,8 @@ import {
     TrashIcon, 
     UserIcon,
     XIcon,
-    PowerIcon
+    PowerIcon,
+    KeyIcon
 } from 'lucide-vue-next';
 import debounce from 'lodash/debounce';
 
@@ -522,11 +539,13 @@ const showUserModal = ref(false);
 const showAdminModal = ref(false);
 const showDetailModal = ref(false);
 const showDeleteModal = ref(false);
+const showResetPasswordModal = ref(false);
 
 const editingUser = ref(null);
 const editingAdmin = ref(null);
 const detailData = ref({});
 const itemToDelete = ref(null);
+const adminToResetPassword = ref(null);
 
 // Forms
 const userForm = useForm({
@@ -603,9 +622,11 @@ const closeModal = () => {
     showUserModal.value = false;
     showAdminModal.value = false;
     showDeleteModal.value = false;
+    showResetPasswordModal.value = false;
     editingUser.value = null;
     editingAdmin.value = null;
     itemToDelete.value = null;
+    adminToResetPassword.value = null;
     userForm.reset();
     adminForm.reset();
 };
@@ -665,6 +686,22 @@ const toggleAdminStatus = (admin) => {
             // Status updated
         }
     });
+};
+
+const openResetPasswordModal = (admin) => {
+    adminToResetPassword.value = admin;
+    showResetPasswordModal.value = true;
+};
+
+const confirmResetPassword = () => {
+    if (adminToResetPassword.value) {
+        router.patch(route('superadmin.admin.reset-password', adminToResetPassword.value.id), {}, {
+            onSuccess: () => {
+                showResetPasswordModal.value = false;
+                adminToResetPassword.value = null;
+            }
+        });
+    }
 };
 
 // Common Actions
