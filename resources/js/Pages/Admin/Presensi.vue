@@ -203,7 +203,7 @@
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
                 <tr v-for="attendance in recentAttendance" :key="attendance.id" class="hover:bg-gray-50">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ formatDate(attendance.tanggal) }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ attendance.date_display || formatDate(attendance.tanggal) }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ formatTime(attendance.waktu_masuk) }}</td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span :class="getStatusClass(attendance.status)" class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">

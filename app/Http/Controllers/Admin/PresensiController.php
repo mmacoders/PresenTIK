@@ -32,6 +32,7 @@ class PresensiController extends Controller
                 return [
                     'id' => 'presensi_' . $item->id,
                     'tanggal' => $item->tanggal,
+                    'date_display' => Carbon::parse($item->tanggal)->translatedFormat('d M Y'),
                     'waktu_masuk' => $item->waktu_masuk ?? '-',
                     'status' => $item->status,
                 ];
@@ -47,11 +48,23 @@ class PresensiController extends Controller
                     $statusFormatted .= ' (Menunggu)';
                 } elseif ($item->status === 'rejected') {
                     $statusFormatted .= ' (Ditolak)';
+                } elseif ($item->status === 'approved' || $item->status === 'disetujui') {
+                    $statusFormatted .= ' (Disetujui)';
+                }
+                
+                $start = Carbon::parse($item->tanggal_mulai)->translatedFormat('d M');
+                $end = Carbon::parse($item->tanggal_selesai)->translatedFormat('d M Y');
+                
+                if ($item->tanggal_mulai === $item->tanggal_selesai) {
+                    $dateDisplay = Carbon::parse($item->tanggal_mulai)->translatedFormat('d M Y');
+                } else {
+                    $dateDisplay = "$start - $end";
                 }
                 
                 return [
                     'id' => 'izin_' . $item->id,
                     'tanggal' => $item->tanggal_mulai,
+                    'date_display' => $dateDisplay,
                     'waktu_masuk' => '-',
                     'status' => $statusFormatted,
                 ];
