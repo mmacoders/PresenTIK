@@ -95,7 +95,7 @@ class PegawaiController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'nullable|string|email|max:255|unique:users',
             'no_hp' => 'nullable|string|max:20',
             'pangkat' => 'nullable|string|max:255',
             'nip' => 'nullable|string|max:50',
@@ -135,7 +135,7 @@ class PegawaiController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => [
-                'required',
+                'nullable',
                 'email',
                 'max:255',
                 Rule::unique('users')->ignore($user->id),

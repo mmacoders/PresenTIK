@@ -305,7 +305,6 @@
                     type="email"
                     class="mt-1 block w-full"
                     placeholder="email@example.com"
-                    required
                   />
                   <InputError :message="userForm.errors.email" class="mt-2" />
                 </div>
