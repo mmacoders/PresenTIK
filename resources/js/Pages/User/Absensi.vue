@@ -150,15 +150,11 @@
                 
                 <div class="mt-auto">
                   <button 
-                    @click="showPermissionModal = true"
-                    :disabled="todayIzin && (todayIzin.status === 'pending' || todayIzin.status === 'approved' || todayIzin.status === 'disetujui')"
-                    class="w-full py-4 rounded-xl transition-colors duration-200 font-semibold flex items-center justify-center"
-                    :class="todayIzin && (todayIzin.status === 'pending' || todayIzin.status === 'approved' || todayIzin.status === 'disetujui') 
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                      : 'bg-blue-600 text-white hover:bg-blue-700'"
+                    @click="handlePermissionClick"
+                    class="w-full py-4 rounded-xl transition-colors duration-200 font-semibold flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700"
                   >
                     <PlusIcon class="w-5 h-5 mr-2" />
-                    {{ todayIzin && (todayIzin.status === 'pending' || todayIzin.status === 'approved' || todayIzin.status === 'disetujui') ? 'Izin Telah Diajukan' : 'Ajukan Izin' }}
+                    Ajukan Izin
                   </button>
                 </div>
               </div>
@@ -641,6 +637,20 @@ const getIzinStatusClass = (izin) => {
     if (izin.status === 'approved') return 'bg-green-50 border-green-200 text-green-800';
     if (izin.status === 'rejected') return 'bg-red-50 border-red-200 text-red-800';
     return 'bg-yellow-50 border-yellow-200 text-yellow-800';
+};
+
+const handlePermissionClick = () => {
+  if (props.todayIzin && (props.todayIzin.status === 'pending' || props.todayIzin.status === 'approved' || props.todayIzin.status === 'disetujui')) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Tidak Dapat Mengajukan Izin',
+      text: 'Anda sudah memiliki pengajuan izin yang aktif atau sedang diproses untuk hari ini.',
+      confirmButtonColor: '#3085d6',
+      confirmButtonText: 'OK'
+    });
+  } else {
+    showPermissionModal.value = true;
+  }
 };
   
 

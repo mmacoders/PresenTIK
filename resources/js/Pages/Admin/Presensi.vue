@@ -94,16 +94,11 @@
               <p class="text-gray-700 mb-4">Ajukan izin jika tidak dapat hadir hari ini:</p>
               
               <button 
-                @click="showPermissionModal = true"
-                :disabled="(todayAttendance && todayAttendance.waktu_masuk && todayAttendance.waktu_masuk !== '-') || (todayIzin && (todayIzin.status === 'pending' || todayIzin.status === 'approved' || todayIzin.status === 'disetujui'))"
-                :title="(todayAttendance && todayAttendance.waktu_masuk && todayAttendance.waktu_masuk !== '-') ? 'Anda sudah melakukan presensi hari ini' : ((todayIzin && (todayIzin.status === 'pending' || todayIzin.status === 'approved' || todayIzin.status === 'disetujui')) ? 'Izin Telah Diajukan' : 'Ajukan Izin')"
-                class="w-full py-4 rounded-xl transition-all duration-200 font-semibold flex items-center justify-center text-lg shadow-md hover:shadow-lg"
-                :class="((todayAttendance && todayAttendance.waktu_masuk && todayAttendance.waktu_masuk !== '-') || (todayIzin && (todayIzin.status === 'pending' || todayIzin.status === 'approved' || todayIzin.status === 'disetujui'))) 
-                  ? 'bg-gray-400 text-white cursor-not-allowed opacity-75' 
-                  : 'bg-blue-600 text-white hover:bg-blue-700'"
+                @click="handlePermissionClick"
+                class="w-full py-4 rounded-xl transition-all duration-200 font-semibold flex items-center justify-center text-lg shadow-md hover:shadow-lg bg-blue-600 text-white hover:bg-blue-700"
               >
                 <PlusIcon class="w-6 h-6 mr-2" />
-                {{ (todayIzin && (todayIzin.status === 'pending' || todayIzin.status === 'approved' || todayIzin.status === 'disetujui')) ? 'Izin Telah Diajukan' : 'Ajukan Izin' }}
+                Ajukan Izin
               </button>
             </div>
 
@@ -703,6 +698,33 @@ const getStatusClass = (status) => {
   if (status && (status.startsWith('Tidak Hadir') || status.includes('(Ditolak)'))) return 'bg-red-100 text-red-800';
   if (status && (['Izin', 'Sakit', 'Cuti', 'Lainnya'].some(s => status.includes(s)))) return 'bg-blue-100 text-blue-800';
   return 'bg-gray-100 text-gray-800';
+};
+
+const handlePermissionClick = () => {
+  // Check if attendance exists
+  if (props.todayAttendance && props.todayAttendance.waktu_masuk && props.todayAttendance.waktu_masuk !== '-') {
+     Swal.fire({
+      icon: 'warning',
+      title: 'Sudah Presensi',
+      text: 'Anda sudah melakukan presensi hari ini.',
+      confirmButtonColor: '#3085d6',
+      confirmButtonText: 'OK'
+    });
+    return;
+  }
+
+  // Check if permission exists
+  if (props.todayIzin && (props.todayIzin.status === 'pending' || props.todayIzin.status === 'approved' || props.todayIzin.status === 'disetujui')) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Tidak Dapat Mengajukan Izin',
+      text: 'Anda sudah memiliki pengajuan izin yang aktif atau sedang diproses untuk hari ini.',
+      confirmButtonColor: '#3085d6',
+      confirmButtonText: 'OK'
+    });
+  } else {
+    showPermissionModal.value = true;
+  }
 };
 
 // Permission Methods
