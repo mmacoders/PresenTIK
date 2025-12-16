@@ -700,30 +700,7 @@ const getStatusClass = (status) => {
 };
 
 const handlePermissionClick = () => {
-  // Check if attendance exists
-  if (props.todayAttendance && props.todayAttendance.waktu_masuk && props.todayAttendance.waktu_masuk !== '-') {
-     Swal.fire({
-      icon: 'warning',
-      title: 'Sudah Presensi',
-      text: 'Anda sudah melakukan presensi hari ini.',
-      confirmButtonColor: '#3085d6',
-      confirmButtonText: 'OK'
-    });
-    return;
-  }
-
-  // Check if permission exists
-  if (props.todayIzin && (props.todayIzin.status === 'pending' || props.todayIzin.status === 'approved' || props.todayIzin.status === 'disetujui')) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Tidak Dapat Mengajukan Izin',
-      text: 'Anda sudah memiliki pengajuan izin yang aktif atau sedang diproses untuk hari ini.',
-      confirmButtonColor: '#3085d6',
-      confirmButtonText: 'OK'
-    });
-  } else {
-    showPermissionModal.value = true;
-  }
+  showPermissionModal.value = true;
 };
 
 // Permission Methods

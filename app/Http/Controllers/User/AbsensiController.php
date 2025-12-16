@@ -197,30 +197,15 @@ class AbsensiController extends Controller
             'keterangan' => 'required|string|max:500',
         ]);
 
-        // Check for overlapping leave requests
-        $overlap = Izin::where('user_id', $user->id)
+        // Check for permission with same end date as requested by user
+        // "izin di tanggal selesai yang sama itu tidak boleh"
+        $sameEndDate = Izin::where('user_id', $user->id)
             ->where('status', '!=', 'rejected')
-            ->where(function ($query) use ($request) {
-                // Check if new start date falls within existing range
-                $query->where(function ($q) use ($request) {
-                    $q->where('tanggal_mulai', '<=', $request->tanggal_mulai)
-                      ->where('tanggal_selesai', '>=', $request->tanggal_mulai);
-                })
-                // Check if new end date falls within existing range
-                ->orWhere(function ($q) use ($request) {
-                    $q->where('tanggal_mulai', '<=', $request->tanggal_selesai)
-                      ->where('tanggal_selesai', '>=', $request->tanggal_selesai);
-                })
-                // Check if existing range falls within new range
-                ->orWhere(function ($q) use ($request) {
-                    $q->where('tanggal_mulai', '>=', $request->tanggal_mulai)
-                      ->where('tanggal_selesai', '<=', $request->tanggal_selesai);
-                });
-            })
+            ->where('tanggal_selesai', $request->tanggal_selesai)
             ->exists();
 
-        if ($overlap) {
-            return redirect()->back()->with('error', 'Anda sudah memiliki izin yang berlaku pada tanggal tersebut.');
+        if ($sameEndDate) {
+            return redirect()->back()->with('error', 'Anda sudah memiliki izin dengan tanggal selesai yang sama (' . Carbon::parse($request->tanggal_selesai)->translatedFormat('d F Y') . ').');
         }
         
         try {

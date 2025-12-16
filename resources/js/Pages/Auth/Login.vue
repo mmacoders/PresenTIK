@@ -45,7 +45,13 @@ const submit = () => {
 
             <div class="relative z-10 text-center px-10">
                 <img src="/images/logo-tik-polri.png" alt="Logo Polda TIK" class="h-48 w-auto mx-auto mb-8 drop-shadow-2xl animate-fade-in-up" />
-                <h1 class="text-4xl font-bold text-white tracking-wider mb-4">PRESENSI TIK</h1>
+                <h1 class="relative z-10 text-4xl font-extrabold tracking-widest">
+                    <span class="text-white lg:text-gray-100">PRESEN</span>
+                    <span class="text-red-600">TIK</span>
+                </h1>
+
+
+
                 <p class="text-gray-400 text-lg tracking-wide">POLDA GORONTALO</p>
                 <div class="mt-8 w-24 h-1 bg-red-600 mx-auto rounded-full"></div>
             </div>
@@ -70,21 +76,36 @@ const submit = () => {
         
             <div class="w-full max-w-md space-y-8">
                 <!-- Mobile Logo (Visible only on small screens) -->
-                <div class="lg:hidden text-center mb-8">
-                    <img src="/images/logo-tik-polri.png" alt="Logo Polda TIK" class="h-24 w-auto mx-auto mb-4" />
-                    <h2 class="text-2xl font-bold text-gray-900">PRESENTIK</h2>
-                    <p class="text-gray-500 text-sm">POLDA GORONTALO</p>
+                <!-- Mobile Branding (Same as Desktop Style) -->
+                <div class="lg:hidden text-center mb-10 relative">
+                    <!-- Glow -->
+                    <div class="absolute inset-0 flex justify-center">
+                        <div class="w-40 h-40 bg-red-600 opacity-20 blur-3xl rounded-full"></div>
+                    </div>
+
+                    <img 
+                        src="/images/logo-tik-polri.png"
+                        alt="Logo Polda TIK"
+                        class="relative z-10 h-28 w-auto mx-auto mb-4 drop-shadow-xl"
+                    />
+
+                    <h1 class="relative z-10 text-4xl font-extrabold tracking-widest 
+                        text-white lg:text-gray-900">
+                        PRESEN<span class="text-red-600">TIK</span>
+                    </h1>
+
+                    <p class="relative z-10 text-sm font-semibold tracking-widest 
+                    text-white lg:text-gray-900">
+                        POLDA GORONTALO
+                    </p>
                 </div>
 
-                <div class="text-center lg:text-left">
-                    <h2 class="text-3xl font-bold text-white lg:text-gray-900 tracking-tight">
-                    Selamat Datang
-                    </h2>
 
-                    <p class="mt-2 text-gray-300 lg:text-gray-600">
-                    Silahkan login untuk mengakses akun Anda
-                    </p>
-                    
+                <div class="text-center lg:text-left">
+                    <h2 class="text-xl lg:text-2xl font-bold text-white lg:text-gray-900 tracking-tight">
+                        Selamat Datang
+                    </h2>
+      
                 </div>
 
                 <div v-if="status" class="p-4 rounded-lg bg-green-50 text-green-700 text-sm font-medium border border-green-200 flex items-center">

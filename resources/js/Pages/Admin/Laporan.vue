@@ -353,6 +353,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { router, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import debounce from 'lodash/debounce';
+import Swal from 'sweetalert2'
 import { 
     SearchIcon, 
     FilterIcon, 
@@ -575,17 +576,43 @@ const refreshData = () => {
 };
 
 const updateStatus = (id, status) => {
-    if (confirm(`Apakah Anda yakin ingin ${status === 'approved' ? 'menyetujui' : 'menolak'} izin ini?`)) {
-        router.patch(route('admin.izin.update', id), {
-            status: status
-        }, {
-            preserveScroll: true,
-            onSuccess: () => {
-                // Optional: Show success message
-            }
-        });
-    }
-};
+    const isApprove = status === 'approved'
+
+    Swal.fire({
+        title: isApprove ? 'Setujui Izin?' : 'Tolak Izin?',
+        text: isApprove
+            ? 'Apakah Anda yakin ingin menyetujui izin ini?'
+            : 'Apakah Anda yakin ingin menolak izin ini?',
+        icon: isApprove ? 'question' : 'warning',
+        showCancelButton: true,
+        confirmButtonText: isApprove ? 'Ya, Setujui' : 'Ya, Tolak',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: isApprove ? '#16a34a' : '#dc2626',
+        cancelButtonColor: '#6b7280'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.patch(
+                route('admin.izin.update', id),
+                { status },
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: isApprove ? 'Disetujui' : 'Ditolak',
+                            text: isApprove
+                                ? 'Izin berhasil disetujui.'
+                                : 'Izin berhasil ditolak.',
+                            timer: 1800,
+                            showConfirmButton: false
+                        })
+                    }
+                }
+            )
+        }
+    })
+}
+
 
 // Click outside handler for filter popover
 const handleClickOutside = (event) => {

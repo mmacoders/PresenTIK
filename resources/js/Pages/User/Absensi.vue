@@ -640,17 +640,7 @@ const getIzinStatusClass = (izin) => {
 };
 
 const handlePermissionClick = () => {
-  if (props.todayIzin && (props.todayIzin.status === 'pending' || props.todayIzin.status === 'approved' || props.todayIzin.status === 'disetujui')) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Tidak Dapat Mengajukan Izin',
-      text: 'Anda sudah memiliki pengajuan izin yang aktif atau sedang diproses untuk hari ini.',
-      confirmButtonColor: '#3085d6',
-      confirmButtonText: 'OK'
-    });
-  } else {
-    showPermissionModal.value = true;
-  }
+  showPermissionModal.value = true;
 };
   
 
