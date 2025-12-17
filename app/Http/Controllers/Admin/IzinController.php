@@ -72,6 +72,29 @@ class IzinController extends Controller
             'keterangan' => 'required|string|max:500',
             'file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048', // Add file validation
         ]);
+
+        // Check for permission with exact same start date AND same end date for the selected user
+        // Rule 1: "jika user melakukan izin double di tanggal awal yang sama dan juga di tanggal selesai yang sama maka tidak bisa"
+        // Rule 2: "jika user melaukan izin double di tanggal awal yang sama tetapi di tanggal selesai yang berbeda maka itu bisa"
+        
+        \Log::info('ADMIN IZIN - Checking duplicate izin', [
+            'user_id' => $request->user_id,
+            'tanggal_mulai' => $request->tanggal_mulai,
+            'tanggal_selesai' => $request->tanggal_selesai,
+        ]);
+        
+        $duplicateIzin = Izin::where('user_id', $request->user_id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->whereDate('tanggal_mulai', '=', $request->tanggal_mulai)
+            ->whereDate('tanggal_selesai', '=', $request->tanggal_selesai)
+            ->exists();
+        
+        \Log::info('ADMIN IZIN - Duplicate check result:', ['duplicate_found' => $duplicateIzin]);
+
+        if ($duplicateIzin) {
+            \Log::warning('ADMIN IZIN - Duplicate izin detected, blocking request');
+            return redirect()->back()->with('error', 'Pegawai ini sudah memiliki izin dengan tanggal mulai dan selesai yang sama.');
+        }
         
         // Check if the admin can create izin for this user (admin can create for any user)
         $user = User::find($request->user_id);

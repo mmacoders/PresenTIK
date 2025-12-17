@@ -7,6 +7,7 @@ use App\Models\Absensi;
 use App\Models\SystemSetting;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class PresensiController extends Controller
@@ -173,18 +174,41 @@ class PresensiController extends Controller
             'catatan' => 'required|string|in:Izin,Sakit,Cuti,Lainnya',
         ]);
 
-        // Check for overlapping leave requests
-        // Check for permission with same end date as requested by user
-        // "izin di tanggal selesai yang sama itu tidak boleh"
-        $sameEndDate = \App\Models\Izin::where('user_id', $user->id)
-            ->where('status', '!=', 'rejected')
-            ->where('tanggal_selesai', $request->tanggal_selesai)
-            ->exists();
 
-        if ($sameEndDate) {
-            return back()->with('error', 'Anda sudah memiliki izin dengan tanggal selesai yang sama (' . Carbon::parse($request->tanggal_selesai)->translatedFormat('d F Y') . ').');
+        // Check for permission with exact same start date AND same end date for the selected user
+        // Rule 1: "jika user melakukan izin double di tanggal awal yang sama dan juga di tanggal selesai yang sama maka tidak bisa"
+        // Rule 2: "jika user melaukan izin double di tanggal awal yang sama tetapi di tanggal selesai yang berbeda maka itu bisa"
+        
+        // Debug logging
+        \Log::info('Checking duplicate izin', [
+            'user_id' => $user->id,
+            'tanggal_mulai' => $request->tanggal_mulai,
+            'tanggal_selesai' => $request->tanggal_selesai,
+        ]);
+        
+        // Get existing izin for debugging
+        $existingIzin = \App\Models\Izin::where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->get(['id', 'tanggal_mulai', 'tanggal_selesai', 'status']);
+        
+        \Log::info('Existing izin:', $existingIzin->toArray());
+        
+        $duplicateIzin = \App\Models\Izin::where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->whereDate('tanggal_mulai', '=', $request->tanggal_mulai)
+            ->whereDate('tanggal_selesai', '=', $request->tanggal_selesai)
+            ->exists();
+        
+        \Log::info('Duplicate check result:', ['duplicate_found' => $duplicateIzin]);
+
+        if ($duplicateIzin) {
+            \Log::warning('Duplicate izin detected, blocking request');
+            throw ValidationException::withMessages([
+                'message' => 'Anda tidak dapat mengajukan izin dengan tanggal mulai dan tanggal selesai yang sama.'
+            ]);
         }
         
+
         // Handle file upload
         $filePath = null;
         if ($request->hasFile('file')) {

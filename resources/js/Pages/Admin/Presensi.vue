@@ -746,8 +746,21 @@ const submitPermissionRequest = () => {
   }
 
   router.post(route('admin.presensi.permission'), formData, {
-    onSuccess: () => {
+    onSuccess: (page) => {
       submittingPermission.value = false;
+      
+      // Check if there's an error flash message
+      if (page.props.flash && page.props.flash.error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal!',
+          text: page.props.flash.error,
+          confirmButtonColor: '#dc2626'
+        });
+        return;
+      }
+      
+      // If no error, show success
       showPermissionModal.value = false;
       permissionReason.value = '';
       permissionCategory.value = '';
@@ -761,15 +774,15 @@ const submitPermissionRequest = () => {
     },
     onError: (errors) => {
       submittingPermission.value = false;
-      let errorMessage = 'Terjadi kesalahan saat mengajukan izin';
-      if (errors.file) errorMessage = errors.file;
-      
-      Swal.fire({
-        icon: 'error',
-        title: 'Gagal',
-        text: errorMessage,
-        confirmButtonColor: '#2563eb'
-      });
+
+      if (errors.message) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Pengajuan Ditolak',
+          text: errors.message,
+          confirmButtonColor: '#d33'
+        });
+      }
     }
   });
 };

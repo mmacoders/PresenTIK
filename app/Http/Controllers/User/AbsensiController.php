@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 
 class AbsensiController extends Controller
@@ -197,15 +198,29 @@ class AbsensiController extends Controller
             'keterangan' => 'required|string|max:500',
         ]);
 
-        // Check for permission with same end date as requested by user
-        // "izin di tanggal selesai yang sama itu tidak boleh"
-        $sameEndDate = Izin::where('user_id', $user->id)
-            ->where('status', '!=', 'rejected')
-            ->where('tanggal_selesai', $request->tanggal_selesai)
+        // Check for permission with exact same start date AND same end date for the selected user
+        // Rule 1: "jika user melakukan izin double di tanggal awal yang sama dan juga di tanggal selesai yang sama maka tidak bisa"
+        // Rule 2: "jika user melaukan izin double di tanggal awal yang sama tetapi di tanggal selesai yang berbeda maka itu bisa"
+        
+        \Log::info('USER - Checking duplicate izin', [
+            'user_id' => $user->id,
+            'tanggal_mulai' => $request->tanggal_mulai,
+            'tanggal_selesai' => $request->tanggal_selesai,
+        ]);
+        
+        $duplicateIzin = Izin::where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->whereDate('tanggal_mulai', '=', $request->tanggal_mulai)
+            ->whereDate('tanggal_selesai', '=', $request->tanggal_selesai)
             ->exists();
+        
+        \Log::info('USER - Duplicate check result:', ['duplicate_found' => $duplicateIzin]);
 
-        if ($sameEndDate) {
-            return redirect()->back()->with('error', 'Anda sudah memiliki izin dengan tanggal selesai yang sama (' . Carbon::parse($request->tanggal_selesai)->translatedFormat('d F Y') . ').');
+        if ($duplicateIzin) {
+            \Log::warning('USER - Duplicate izin detected, blocking request');
+            throw ValidationException::withMessages([
+                'message' => 'Anda sudah memiliki izin dengan tanggal mulai dan selesai yang sama.'
+            ]);
         }
         
         try {
