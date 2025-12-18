@@ -99,7 +99,7 @@
                                     <div 
                                         v-if="showFilter" 
                                         ref="filterPopover"
-                                        class="absolute right-0 mt-2 bg-white shadow-lg rounded-xl border p-4 z-50 w-72"
+                                        class="fixed md:absolute left-4 right-4 md:left-auto md:right-0 mt-2 bg-white shadow-lg rounded-xl border p-4 z-50 md:w-72"
                                     >
                                         <div class="space-y-4">
                                             <div>
