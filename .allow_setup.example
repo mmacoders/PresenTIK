@@ -1,0 +1,15 @@
+# Setup Mode Enabled
+
+This file enables the /setup route for application setup.
+
+## Security Notice:
+- DELETE this file after completing setup
+- The /setup route will be disabled automatically without this file in production
+- In development (.env APP_ENV=local), setup is always allowed
+
+## Usage:
+1. Keep this file to access: https://yourdomain.com/setup
+2. Run all setup commands (migrate, storage link, optimize)
+3. DELETE this file for security
+
+Created: <?php echo date('Y-m-d H:i:s'); ?>

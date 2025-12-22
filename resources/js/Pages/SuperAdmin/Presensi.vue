@@ -438,6 +438,12 @@ const isLateArrival = computed(() => {
   return currentTime > gracePeriodEndString;
 });
 
+// Check if today is weekend
+const isWeekend = computed(() => {
+  const day = new Date().getDay();
+  return day === 0 || day === 6; // 0 Sunday, 6 Saturday
+});
+
 // Check if current time is within presensi hours (start time to cutoff time)
 const isWithinPresensiHours = computed(() => {
   if (!props.systemSettings) return false;
@@ -451,11 +457,13 @@ const isWithinPresensiHours = computed(() => {
 });
 
 const isCheckInDisabled = computed(() => {
+  if (isWeekend.value) return true;
   const isLeave = props.todayIzin && props.todayIzin.status === 'approved' && props.todayIzin.jenis_izin === 'penuh';
   return isSubmitting.value || !isWithinPresensiHours.value || isLeave;
 });
 
 const getCheckInButtonText = computed(() => {
+  if (isWeekend.value) return 'Hari Libur (Sabtu/Minggu)';
   if (isSubmitting.value) return 'Memproses...';
   if (props.todayIzin && props.todayIzin.status === 'approved' && props.todayIzin.jenis_izin === 'penuh') return 'Sedang Izin';
   if (!isWithinPresensiHours.value) return 'Diluar Jam Presensi';
@@ -566,6 +574,15 @@ const currentDate = computed(() => {
 });
 
 const handleCheckIn = () => {
+  if (isWeekend.value) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Hari Libur',
+      text: 'Presensi tidak dapat dilakukan pada hari Sabtu dan Minggu.',
+    });
+    return;
+  }
+
   Swal.fire({
     title: 'Konfirmasi Check-in',
     text: 'Apakah Anda yakin ingin melakukan check-in sekarang?',

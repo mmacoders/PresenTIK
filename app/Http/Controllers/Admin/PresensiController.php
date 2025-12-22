@@ -130,6 +130,11 @@ class PresensiController extends Controller
         if ($currentTime < $presensiStartTime) {
             return back()->with('error', 'Belum waktunya presensi. Presensi dimulai pukul ' . substr($presensiStartTime, 0, 5));
         }
+
+        // Check if weekend
+        if (now()->isWeekend()) {
+             return back()->with('error', 'Presensi tidak dapat dilakukan pada hari Sabtu dan Minggu.');
+        }
         
         // Determine status based on time
         $jamMasuk = $settings->jam_masuk ?? '08:00:00';

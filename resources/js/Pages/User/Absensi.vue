@@ -488,6 +488,12 @@ const getAttendanceCardDescription = computed(() => {
   }
 });
 
+// Check if today is weekend
+const isWeekend = computed(() => {
+  const day = new Date().getDay();
+  return day === 0 || day === 6; // 0 Sunday, 6 Saturday
+});
+
 // Check if user is late based on system settings and grace period
 const isLateArrival = computed(() => {
   if (!props.systemSettings) return false;
@@ -542,10 +548,18 @@ const isBeforeStartTime = computed(() => {
 });
 
 const getAttendanceButtonText = computed(() => {
+  if (isWeekend.value) {
+    return 'Hari Libur (Sabtu/Minggu)';
+  }
   return 'Check-in';
 });
 
 const isAttendanceButtonDisabled = computed(() => {
+  // Disable if weekend
+  if (isWeekend.value) {
+    return true;
+  }
+
   // Disable if user has full leave
   if (props.todayIzin && props.todayIzin.jenis_izin === 'penuh') {
     return true;
@@ -744,6 +758,16 @@ const initMap = () => {
 
 // Check-in function with automatic location
 const checkIn = () => {
+  // Check if weekend
+  if (isWeekend.value) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Hari Libur',
+      text: 'Presensi tidak dapat dilakukan pada hari Sabtu dan Minggu.',
+    });
+    return;
+  }
+
   // Check if user has full leave
   if (props.todayIzin && props.todayIzin.jenis_izin === 'penuh') {
     Swal.fire({

@@ -82,7 +82,7 @@
                             <div 
                                 v-if="showFilter" 
                                 ref="filterPopover"
-                                class="fixed md:absolute left-4 right-4 md:left-auto md:right-0 mt-2 bg-white shadow-lg rounded-xl border p-4 z-50 md:w-80"
+                                class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-sm bg-white shadow-2xl rounded-xl border p-4 z-50 md:absolute md:top-full md:right-0 md:left-auto md:translate-x-0 md:translate-y-0 md:mt-2 md:w-80 md:shadow-lg"
                             >
                                 <div class="space-y-4">
                                     <div>

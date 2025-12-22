@@ -115,6 +115,13 @@ class AbsensiController extends Controller
             
             // Get current time using Carbon with proper timezone
             $now = Carbon::now();
+            $currentDay = $now->dayOfWeek; // 0 (Sunday) to 6 (Saturday)
+            
+            // Check if it is weekend
+            if ($currentDay === Carbon::SATURDAY || $currentDay === Carbon::SUNDAY) {
+                 return redirect()->back()->with('error', 'Presensi tidak dapat dilakukan pada hari Sabtu dan Minggu.');
+            }
+            
             $currentTime = $now->format('H:i:s');
             $currentDate = $now->format('Y-m-d');
             

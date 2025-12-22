@@ -126,7 +126,8 @@ import {
   LogOutIcon,
   XIcon,
   CalendarCheckIcon,
-  SettingsIcon
+  SettingsIcon,
+  AwardIcon
 } from 'lucide-vue-next';
 
 // Props
@@ -161,6 +162,12 @@ const menuItems = [
     name: 'Laporan Global',
     href: '/admin/laporan',
     icon: BarChart3Icon,
+    component: 'a'
+  },
+  {
+    name: 'Laporan Disiplin',
+    href: '/admin/laporan-disiplin',
+    icon: AwardIcon,
     component: 'a'
   },
   {

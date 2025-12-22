@@ -15,8 +15,19 @@ use App\Http\Controllers\Admin\PresensiController as AdminPresensiController;
 use App\Http\Controllers\User\AbsensiController;
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\User\ProfilController as UserProfilController;
+use App\Http\Controllers\SetupController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+// Setup routes (for deployment without CLI access)
+Route::prefix('setup')->group(function () {
+    Route::get('/', [SetupController::class, 'index'])->name('setup.index');
+    Route::post('/migrate', [SetupController::class, 'migrate'])->name('setup.migrate');
+    Route::post('/storage-link', [SetupController::class, 'storageLink'])->name('setup.storage-link');
+    Route::post('/optimize', [SetupController::class, 'optimize'])->name('setup.optimize');
+    Route::post('/clear-cache', [SetupController::class, 'clearCache'])->name('setup.clear-cache');
+    Route::post('/disable', [SetupController::class, 'disable'])->name('setup.disable');
+});
 
 // User routes
 Route::middleware(['auth', 'role:user'])->group(function () {
@@ -42,6 +53,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::patch('/admin/pegawai/{user}/reset-password', [AdminPegawaiController::class, 'resetPassword'])->name('admin.pegawai.reset-password');
     Route::get('/admin/laporan', [AdminLaporanController::class, 'index'])->name('admin.laporan');
     Route::get('/admin/laporan/export', [AdminLaporanController::class, 'export'])->name('admin.laporan.export');
+    Route::get('/admin/laporan-disiplin', [App\Http\Controllers\Admin\LaporanDisiplinController::class, 'index'])->name('admin.laporan-disiplin');
     // Izin & Cuti routes
     Route::get('/admin/izin', [App\Http\Controllers\Admin\IzinController::class, 'index'])->name('admin.izin');
     Route::get('/admin/izin/create', [App\Http\Controllers\Admin\IzinController::class, 'create'])->name('admin.izin.create');
