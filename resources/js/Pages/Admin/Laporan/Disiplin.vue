@@ -40,12 +40,22 @@
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-white uppercase tracking-wider">Bebas Telat (20%)</th>
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-white uppercase tracking-wider">Bebas Alpha (20%)</th>
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-white uppercase tracking-wider">Konsistensi (10%)</th>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-white uppercase tracking-wider">Nilai Akhir</th>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-white uppercase tracking-wider">Kategori</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-red-700 transition-colors group" @click="toggleSort">
+                                    <div class="flex items-center justify-center gap-1">
+                                        Nilai Akhir
+                                        <ArrowUpDownIcon class="w-4 h-4 text-red-200 group-hover:text-white" :class="{'rotate-180': sortOrder === 'asc'}" />
+                                    </div>
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-red-700 transition-colors group" @click="toggleSort">
+                                    <div class="flex items-center justify-center gap-1">
+                                        Kategori
+                                        <ArrowUpDownIcon class="w-4 h-4 text-red-200 group-hover:text-white" :class="{'rotate-180': sortOrder === 'asc'}" />
+                                    </div>
+                                </th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            <tr v-for="(item, index) in rankingData" :key="item.user.id" class="hover:bg-gray-50 transition-colors cursor-pointer" @click="showDetails(item)">
+                            <tr v-for="(item, index) in sortedData" :key="item.user.id" class="hover:bg-gray-50 transition-colors cursor-pointer" @click="showDetails(item)">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-500">
                                     #{{ index + 1 }}
                                 </td>
@@ -80,7 +90,7 @@
                                     </span>
                                 </td>
                             </tr>
-                            <tr v-if="rankingData.length === 0">
+                            <tr v-if="sortedData.length === 0">
                                 <td colspan="9" class="px-6 py-8 text-center text-sm text-gray-500">
                                     Belum ada data untuk periode ini.
                                 </td>
@@ -173,7 +183,7 @@
 import { ref, computed } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useForm, router } from '@inertiajs/vue3';
-import { AwardIcon } from 'lucide-vue-next';
+import { AwardIcon, ArrowUpDownIcon } from 'lucide-vue-next';
 
 const props = defineProps({
     rankingData: {
@@ -198,6 +208,22 @@ const years = computed(() => {
 });
 
 const selectedItem = ref(null);
+const sortOrder = ref('desc'); // 'desc' (Highest first) or 'asc' (Lowest first)
+
+const toggleSort = () => {
+    sortOrder.value = sortOrder.value === 'desc' ? 'asc' : 'desc';
+};
+
+const sortedData = computed(() => {
+    // Return a shallow copy sorted by final_score
+    return [...props.rankingData].sort((a, b) => {
+        if (sortOrder.value === 'desc') {
+            return b.final_score - a.final_score;
+        } else {
+            return a.final_score - b.final_score;
+        }
+    });
+});
 
 const applyFilter = () => {
     router.visit(route('admin.laporan-disiplin'), {

@@ -40,10 +40,19 @@ class LaporanDisiplinController extends Controller
             }
         }
         
-        // Prevent division by zero
-        $workingDaysCount = $workingDaysCount ?: 1;
+        // Days to count logic (up to today or full month)
+        $daysToCount = $workingDaysCount ?: 1;
+        if ($endDate->isFuture()) {
+            $periodUpToNow = CarbonPeriod::create($startDate, Carbon::now()->endOfDay()->min($endDate));
+            $daysToCount = 0;
+            foreach($periodUpToNow as $d) {
+                if (!$d->isWeekend()) $daysToCount++;
+            }
+        }
+        $denominator = $daysToCount ?: 1;
 
-        $rankingData = $users->map(function ($user) use ($startDate, $endDate, $workingDaysCount, $jamMasuk, $gracePeriod) {
+        // Step 1: Collect Raw Data for all users
+        $rawData = $users->map(function ($user) use ($startDate, $endDate, $jamMasuk, $gracePeriod, $denominator) {
             // Get Absensi
             $absensis = Absensi::where('user_id', $user->id)
                 ->whereBetween('tanggal', [$startDate, $endDate])
@@ -67,16 +76,19 @@ class LaporanDisiplinController extends Controller
             
             foreach ($absensis as $absensi) {
                 if ($absensi->waktu_masuk) {
-                    $threshold = $jamMasuk->copy()->addMinutes($gracePeriod);
+                    // Parse check-in time safe
+                    $checkInTime = Carbon::parse($absensi->waktu_masuk);
                     
-                    // We need to set the date of threshold to the date of absensi to compare correctly
-                    // Or easier: compare time strings H:i:s
-                    $absensiTime = Carbon::createFromFormat('H:i:s', $absensi->waktu_masuk);
-                    $thresholdTime = Carbon::createFromFormat('H:i:s', $threshold->format('H:i:s'));
+                    // Normalize to comparison date (Today)
+                    $comparisonDate = Carbon::now()->format('Y-m-d');
                     
-                    if ($absensiTime->gt($thresholdTime)) {
+                    $checkInNormalized = Carbon::parse($comparisonDate . ' ' . $checkInTime->format('H:i:s'));
+                    $thresholdNormalized = Carbon::parse($comparisonDate . ' ' . $jamMasuk->format('H:i:s'))
+                                               ->addMinutes($gracePeriod);
+                    
+                    if ($checkInNormalized->gt($thresholdNormalized)) {
                         $lateCount++;
-                        $diff = $absensiTime->diffInMinutes($thresholdTime);
+                        $diff = $checkInNormalized->diffInMinutes($thresholdNormalized);
                         $totalLateMinutes += $diff;
                     }
                 }
@@ -85,11 +97,9 @@ class LaporanDisiplinController extends Controller
             // Calculate Izin Days
             $izinDays = 0;
             foreach ($izins as $izin) {
-                // Intersect izin period with report period and working days
                 $permitStart = Carbon::parse($izin->tanggal_mulai);
                 $permitEnd = Carbon::parse($izin->tanggal_selesai);
                 
-                // Clamp to month
                 if ($permitStart->lt($startDate)) $permitStart = $startDate->copy();
                 if ($permitEnd->gt($endDate)) $permitEnd = $endDate->copy();
                 
@@ -101,69 +111,74 @@ class LaporanDisiplinController extends Controller
                 }
             }
             
-            // Calculate Alpha
-            // Alpha = WorkingDays - (Present + Izin)
-            // Ensure non-negative and don't count future days if looking at current month
-            // But usually reports cover the whole month. If strict "Alpha", we count days past.
-            
-            // For fairness in current month, we should probably only count up to "Today" if current month.
-            $daysToCount = $workingDaysCount;
-            if ($endDate->isFuture()) {
-                // If reporting current month, only count working days up to today
-                $periodUpToNow = CarbonPeriod::create($startDate, Carbon::now()->endOfDay()->min($endDate));
-                $daysToCount = 0;
-                foreach($periodUpToNow as $d) {
-                    if (!$d->isWeekend()) $daysToCount++;
-                }
-            }
-            
-            // Re-calculate Alpha based on days passed
-            $alphaCount = max(0, $daysToCount - ($presentCount + $izinDays));
-            
-            // --- SCORING LOGIC ---
-            
-            // 1. Attendance Percentage (30%)
-            // Formula: (Present / WorkingDays) * 100
-            // Use full working days for projection or days passed?
-            // Let's use days passed to be fair for mid-month check.
-            $denominator = $daysToCount ?: 1;
-            
-            $attendanceScore = ($presentCount / $denominator) * 100;
-            
-            // 2. Punctuality (Average Late Minutes) (20%)
-            // If avg late is 0 -> 100. If 60 mins late -> 40.
-            $avgLateMinutes = $presentCount > 0 ? ($totalLateMinutes / $presentCount) : 0;
-            $punctualityScore = max(0, 100 - $avgLateMinutes); 
-            
-            // 3. Lateness Frequency (20%)
-            // Factor: How many times late vs Present.
-            // If 0 late -> 100.
-            // If 100% late -> 0.
-            $lateFreqRatio = $presentCount > 0 ? ($lateCount / $presentCount) : 0;
-            $lateFreqScore = (1 - $lateFreqRatio) * 100;
-            
-            // 4. Alpha (20%)
-            // Heavy penalty. 
-            // (1 - (Alpha/DaysPassed)) * 100
-            $alphaScore = (1 - ($alphaCount / $denominator)) * 100;
-            $alphaScore = max(0, $alphaScore); // prevent negative
-            
-            // 5. Attendance Consistency (10%)
-            // (Present / (DaysPassed - Izin)) * 100.
-            // i.e. Reliability when expected to be there.
+            $alphaCount = max(0, $denominator - ($presentCount + $izinDays));
             $effectiveWorkingDays = max(1, $denominator - $izinDays);
-            $consistencyScore = ($presentCount / $effectiveWorkingDays) * 100;
-            $consistencyScore = min(100, $consistencyScore); // Cap at 100
-
             
-            // Weighted Sum
+            // Raw Criteria Values
+            return [
+                'user' => $user,
+                'metrics' => [
+                    'working_days' => $denominator,
+                    'present' => $presentCount,
+                    'izin' => $izinDays,
+                    'alpha' => $alphaCount,
+                    'late_count' => $lateCount,
+                    'avg_late_min' => $presentCount > 0 ? ($totalLateMinutes / $presentCount) : 0,
+                    'effective_days' => $effectiveWorkingDays
+                ],
+                // Raw attributes for SAW (C1..C5)
+                'c1_attendance' => $presentCount, // Benefit
+                'c2_punctuality' => $presentCount > 0 ? ($totalLateMinutes / $presentCount) : 0, // Cost
+                'c3_late_freq' => $lateCount,  // Cost
+                'c4_alpha' => $alphaCount,     // Cost
+                'c5_consistency' => ($presentCount / $effectiveWorkingDays) // Benefit (Ratio)
+            ];
+        });
+
+        // Step 2: Determine Max/Min for Normalization
+        $maxC1 = $rawData->max('c1_attendance') ?: 1;
+        $maxC2 = $rawData->max('c2_punctuality') ?: 0;
+        $maxC3 = $rawData->max('c3_late_freq') ?: 0;
+        $maxC4 = $rawData->max('c4_alpha') ?: 0;
+        $maxC5 = $rawData->max('c5_consistency') ?: 1;
+        
+        $minC2 = $rawData->min('c2_punctuality') ?: 0;
+        $minC3 = $rawData->min('c3_late_freq') ?: 0;
+        $minC4 = $rawData->min('c4_alpha') ?: 0;
+
+        // SAW Weights
+        $w1 = 0.30; // Kehadiran
+        $w2 = 0.20; // Ketepatan Waktu
+        $w3 = 0.20; // Frekuensi Terlambat
+        $w4 = 0.20; // Alpha
+        $w5 = 0.10; // Konsistensi
+
+        // Step 3: Calculate SAW Scores
+        $rankingData = $rawData->map(function ($item) use (
+            $maxC1, $maxC2, $maxC3, $maxC4, $maxC5, 
+            $minC2, $minC3, $minC4,
+            $w1, $w2, $w3, $w4, $w5
+        ) {
+            // Normalization
+            // Benefit: x / Max
+            // Cost (Linear): (Max - x) / (Max - Min). If Max=Min, score is 1 (perfect).
+            
+            $r1 = $item['c1_attendance'] / $maxC1;
+            
+            $r2 = ($maxC2 == $minC2) ? 1 : (($maxC2 - $item['c2_punctuality']) / ($maxC2 - $minC2));
+            $r3 = ($maxC3 == $minC3) ? 1 : (($maxC3 - $item['c3_late_freq']) / ($maxC3 - $minC3));
+            $r4 = ($maxC4 == $minC4) ? 1 : (($maxC4 - $item['c4_alpha']) / ($maxC4 - $minC4));
+            
+            $r5 = $item['c5_consistency'] / $maxC5; // Actually this is already a ratio 0-1, but strictly SAW normalizes against the best in group.
+
+            // Calculate Final Score (Scale to 100)
             $finalScore = (
-                ($attendanceScore * 0.30) +
-                ($punctualityScore * 0.20) +
-                ($lateFreqScore * 0.20) +
-                ($alphaScore * 0.20) +
-                ($consistencyScore * 0.10)
-            );
+                ($r1 * $w1) +
+                ($r2 * $w2) +
+                ($r3 * $w3) +
+                ($r4 * $w4) +
+                ($r5 * $w5)
+            ) * 100;
             
             // Category
             $category = 'Kurang Disiplin';
@@ -172,23 +187,24 @@ class LaporanDisiplinController extends Controller
             } elseif ($finalScore >= 70) {
                 $category = 'Cukup Disiplin';
             }
-            
+
             return [
-                'user' => $user->only(['id', 'name', 'nip', 'jabatan']),
+                'user' => $item['user']->only(['id', 'name', 'nip', 'jabatan']),
                 'metrics' => [
-                    'working_days' => $denominator,
-                    'present' => $presentCount,
-                    'izin' => $izinDays,
-                    'alpha' => $alphaCount,
-                    'late_count' => $lateCount,
-                    'avg_late_min' => round($avgLateMinutes, 1),
+                    'working_days' => $item['metrics']['working_days'],
+                    'present' => $item['metrics']['present'],
+                    'izin' => $item['metrics']['izin'],
+                    'alpha' => $item['metrics']['alpha'],
+                    'late_count' => $item['metrics']['late_count'],
+                    'avg_late_min' => round($item['metrics']['avg_late_min'], 1),
                 ],
                 'scores' => [
-                    'attendance' => round($attendanceScore, 1),
-                    'punctuality' => round($punctualityScore, 1),
-                    'late_freq' => round($lateFreqScore, 1),
-                    'alpha' => round($alphaScore, 1),
-                    'consistency' => round($consistencyScore, 1),
+                    // Display normalized scores scaled to 100 for better readability in UI
+                    'attendance' => round($r1 * 100, 1),
+                    'punctuality' => round($r2 * 100, 1),
+                    'late_freq' => round($r3 * 100, 1),
+                    'alpha' => round($r4 * 100, 1),
+                    'consistency' => round($r5 * 100, 1),
                 ],
                 'final_score' => round($finalScore, 2),
                 'category' => $category,
