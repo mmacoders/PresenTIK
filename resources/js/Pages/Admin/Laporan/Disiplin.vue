@@ -244,8 +244,10 @@ const showDetails = (item) => {
 const getCategoryClass = (category) => {
     switch(category) {
         case 'Sangat Disiplin': return 'bg-green-100 text-green-800';
-        case 'Cukup Disiplin': return 'bg-blue-100 text-blue-800';
-        case 'Kurang Disiplin': return 'bg-red-100 text-red-800';
+        case 'Disiplin': return 'bg-teal-100 text-teal-800';
+        case 'Cukup': return 'bg-blue-100 text-blue-800';
+        case 'Kurang': return 'bg-yellow-100 text-yellow-800';
+        case 'Tidak Disiplin': return 'bg-red-100 text-red-800';
         default: return 'bg-gray-100 text-gray-800';
     }
 };
@@ -253,15 +255,19 @@ const getCategoryClass = (category) => {
 const getCategoryTextClass = (category) => {
     switch(category) {
         case 'Sangat Disiplin': return 'text-green-600';
-        case 'Cukup Disiplin': return 'text-blue-600';
-        case 'Kurang Disiplin': return 'text-red-600';
+        case 'Disiplin': return 'text-teal-600';
+        case 'Cukup': return 'text-blue-600';
+        case 'Kurang': return 'text-yellow-600';
+        case 'Tidak Disiplin': return 'text-red-600';
         default: return 'text-gray-600';
     }
 };
 
 const getScoreColor = (score) => {
-    if (score >= 85) return 'text-green-600';
-    if (score >= 70) return 'text-blue-600';
+    if (score >= 90) return 'text-green-600';
+    if (score >= 75) return 'text-teal-600';
+    if (score >= 60) return 'text-blue-600';
+    if (score >= 40) return 'text-yellow-600';
     return 'text-red-600';
 };
 </script>

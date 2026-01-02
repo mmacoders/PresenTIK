@@ -1,0 +1,92 @@
+# Penjelasan Sistem Penilaian Disiplin (Versi Singkat)
+
+1. Prinsip Penilaian
+
+Penilaian dilakukan dengan *sistem bobot*.
+Setiap kriteria memiliki nilai *0–100*, lalu dikalikan dengan bobotnya.
+
+---
+
+2. Kriteria dan Bobot
+
+| Kriteria        | Bobot    |
+| --------------- | -------- |
+| Kehadiran       | 30%      |
+| Ketepatan Waktu | 20%      |
+| Bebas Telat     | 20%      |
+| Bebas Alpha     | 20%      |
+| Konsistensi     | 10%      |
+| *Total*       | *100%* |
+
+---
+
+3. Cara Menghitung Tiap Kriteria
+
+# Kehadiran
+
+
+(Hadir / Total Hari Kerja) × 100
+
+
+# Ketepatan Waktu
+
+* 0 menit → 100
+* 1–5 menit → 80
+* 6–10 menit → 60
+* > 10 menit → 40
+
+# Bebas Telat
+
+* 0 kali → 100
+* 1–2 kali → 70
+* 3–5 kali → 40
+* > 5 kali → 0
+
+# Bebas Alpha
+
+* 0 hari → 100
+* 1 hari → 60
+* 2 hari → 40
+* ≥3 hari → 0
+
+# Konsistensi
+
+
+Hadir ÷ (Total Hari − Izin) × 100
+
+
+---
+
+4. Rumus Nilai Akhir
+
+
+(Kehadiran × 30%)
++ (Ketepatan × 20%)
++ (Bebas Telat × 20%)
++ (Bebas Alpha × 20%)
++ (Konsistensi × 10%)
+
+
+---
+
+5. Kategori Nilai
+
+| Nilai    | Kategori        |
+| -------- | --------------- |
+| 90 – 100 | Sangat Disiplin |
+| 75 – 89  | Disiplin        |
+| 60 – 74  | Cukup           |
+| 40 – 59  | Kurang          |
+| < 40     | Tidak Disiplin  |
+
+---
+
+✅ Kesimpulan
+
+Sistem ini:
+
+* Mudah dipahami
+* Objektif & adil
+* Cocok untuk SPK / laporan resmi
+
+---

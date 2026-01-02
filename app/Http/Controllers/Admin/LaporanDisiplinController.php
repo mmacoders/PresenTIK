@@ -52,7 +52,7 @@ class LaporanDisiplinController extends Controller
         $denominator = $daysToCount ?: 1;
 
         // Step 1: Collect Raw Data for all users
-        $rawData = $users->map(function ($user) use ($startDate, $endDate, $jamMasuk, $gracePeriod, $denominator) {
+        $rankingData = $users->map(function ($user) use ($startDate, $endDate, $jamMasuk, $gracePeriod, $denominator) {
             // Get Absensi
             $absensis = Absensi::where('user_id', $user->id)
                 ->whereBetween('tanggal', [$startDate, $endDate])
@@ -114,97 +114,103 @@ class LaporanDisiplinController extends Controller
             $alphaCount = max(0, $denominator - ($presentCount + $izinDays));
             $effectiveWorkingDays = max(1, $denominator - $izinDays);
             
-            // Raw Criteria Values
+            // Raw Metrics
+            $avgLateMinutes = $presentCount > 0 ? ($totalLateMinutes / $presentCount) : 0;
+
+            // --- SCORING Logic (Absolute Thresholds) ---
+            
+            // C1: Kehadiran (30%)
+            // Formula: (Hadir / Total Hari Kerja) * 100
+            $valC1 = ($presentCount / $denominator) * 100;
+            $scoreC1 = max(0, min(100, $valC1)); // Clamp 0-100
+
+            // C2: Ketepatan Waktu (20%) - Avg Late Minutes
+            // * 0 menit -> 100
+            // * 1-5 menit -> 80
+            // * 6-10 menit -> 60
+            // * > 10 menit -> 40
+            if ($avgLateMinutes <= 0) $scoreC2 = 100;
+            elseif ($avgLateMinutes <= 5) $scoreC2 = 80;
+            elseif ($avgLateMinutes <= 10) $scoreC2 = 60;
+            else $scoreC2 = 40;
+            
+            // C3: Bebas Telat (20%) - Frequency
+            // * 0 kali -> 100
+            // * 1-2 kali -> 70
+            // * 3-5 kali -> 40
+            // * > 5 kali -> 0
+            if ($lateCount == 0) $scoreC3 = 100;
+            elseif ($lateCount <= 2) $scoreC3 = 70;
+            elseif ($lateCount <= 5) $scoreC3 = 40;
+            else $scoreC3 = 0;
+            
+            // C4: Bebas Alpha (20%)
+            // * 0 hari -> 100
+            // * 1 hari -> 60
+            // * 2 hari -> 40
+            // * >=3 hari -> 0
+            if ($alphaCount == 0) $scoreC4 = 100;
+            elseif ($alphaCount == 1) $scoreC4 = 60;
+            elseif ($alphaCount == 2) $scoreC4 = 40;
+            else $scoreC4 = 0;
+
+            // C5: Konsistensi (10%)
+            // Formula: Hadir / (Total Hari - Izin) * 100
+            $valC5 = ($effectiveWorkingDays > 0) ? (($presentCount / $effectiveWorkingDays) * 100) : 0;
+            $scoreC5 = max(0, min(100, $valC5));
+
+            // Weights
+            $w1 = 0.30;
+            $w2 = 0.20;
+            $w3 = 0.20;
+            $w4 = 0.20;
+            $w5 = 0.10;
+
+            // Final Calculation
+            $finalScore = (
+                ($scoreC1 * $w1) +
+                ($scoreC2 * $w2) +
+                ($scoreC3 * $w3) +
+                ($scoreC4 * $w4) +
+                ($scoreC5 * $w5)
+            );
+            
+            // Category Classification
+            /*
+            | 90 – 100 | Sangat Disiplin |
+            | 75 – 89  | Disiplin        |
+            | 60 – 74  | Cukup           |
+            | 40 – 59  | Kurang          |
+            | < 40     | Tidak Disiplin  |
+            */
+            $category = 'Tidak Disiplin';
+            if ($finalScore >= 90) {
+                $category = 'Sangat Disiplin';
+            } elseif ($finalScore >= 75) {
+                $category = 'Disiplin';
+            } elseif ($finalScore >= 60) {
+                $category = 'Cukup';
+            } elseif ($finalScore >= 40) {
+                $category = 'Kurang';
+            }
+            
             return [
-                'user' => $user,
+                'user' => $user->only(['id', 'name', 'nip', 'jabatan']),
                 'metrics' => [
                     'working_days' => $denominator,
                     'present' => $presentCount,
                     'izin' => $izinDays,
                     'alpha' => $alphaCount,
                     'late_count' => $lateCount,
-                    'avg_late_min' => $presentCount > 0 ? ($totalLateMinutes / $presentCount) : 0,
-                    'effective_days' => $effectiveWorkingDays
+                    'avg_late_min' => round($avgLateMinutes, 1),
                 ],
-                // Raw attributes for SAW (C1..C5)
-                'c1_attendance' => $presentCount, // Benefit
-                'c2_punctuality' => $presentCount > 0 ? ($totalLateMinutes / $presentCount) : 0, // Cost
-                'c3_late_freq' => $lateCount,  // Cost
-                'c4_alpha' => $alphaCount,     // Cost
-                'c5_consistency' => ($presentCount / $effectiveWorkingDays) // Benefit (Ratio)
-            ];
-        });
-
-        // Step 2: Determine Max/Min for Normalization
-        $maxC1 = $rawData->max('c1_attendance') ?: 1;
-        $maxC2 = $rawData->max('c2_punctuality') ?: 0;
-        $maxC3 = $rawData->max('c3_late_freq') ?: 0;
-        $maxC4 = $rawData->max('c4_alpha') ?: 0;
-        $maxC5 = $rawData->max('c5_consistency') ?: 1;
-        
-        $minC2 = $rawData->min('c2_punctuality') ?: 0;
-        $minC3 = $rawData->min('c3_late_freq') ?: 0;
-        $minC4 = $rawData->min('c4_alpha') ?: 0;
-
-        // SAW Weights
-        $w1 = 0.30; // Kehadiran
-        $w2 = 0.20; // Ketepatan Waktu
-        $w3 = 0.20; // Frekuensi Terlambat
-        $w4 = 0.20; // Alpha
-        $w5 = 0.10; // Konsistensi
-
-        // Step 3: Calculate SAW Scores
-        $rankingData = $rawData->map(function ($item) use (
-            $maxC1, $maxC2, $maxC3, $maxC4, $maxC5, 
-            $minC2, $minC3, $minC4,
-            $w1, $w2, $w3, $w4, $w5
-        ) {
-            // Normalization
-            // Benefit: x / Max
-            // Cost (Linear): (Max - x) / (Max - Min). If Max=Min, score is 1 (perfect).
-            
-            $r1 = $item['c1_attendance'] / $maxC1;
-            
-            $r2 = ($maxC2 == $minC2) ? 1 : (($maxC2 - $item['c2_punctuality']) / ($maxC2 - $minC2));
-            $r3 = ($maxC3 == $minC3) ? 1 : (($maxC3 - $item['c3_late_freq']) / ($maxC3 - $minC3));
-            $r4 = ($maxC4 == $minC4) ? 1 : (($maxC4 - $item['c4_alpha']) / ($maxC4 - $minC4));
-            
-            $r5 = $item['c5_consistency'] / $maxC5; // Actually this is already a ratio 0-1, but strictly SAW normalizes against the best in group.
-
-            // Calculate Final Score (Scale to 100)
-            $finalScore = (
-                ($r1 * $w1) +
-                ($r2 * $w2) +
-                ($r3 * $w3) +
-                ($r4 * $w4) +
-                ($r5 * $w5)
-            ) * 100;
-            
-            // Category
-            $category = 'Kurang Disiplin';
-            if ($finalScore >= 85) {
-                $category = 'Sangat Disiplin';
-            } elseif ($finalScore >= 70) {
-                $category = 'Cukup Disiplin';
-            }
-
-            return [
-                'user' => $item['user']->only(['id', 'name', 'nip', 'jabatan']),
-                'metrics' => [
-                    'working_days' => $item['metrics']['working_days'],
-                    'present' => $item['metrics']['present'],
-                    'izin' => $item['metrics']['izin'],
-                    'alpha' => $item['metrics']['alpha'],
-                    'late_count' => $item['metrics']['late_count'],
-                    'avg_late_min' => round($item['metrics']['avg_late_min'], 1),
-                ],
+                // Return threshold-based scores (already normalized 0-100)
                 'scores' => [
-                    // Display normalized scores scaled to 100 for better readability in UI
-                    'attendance' => round($r1 * 100, 1),
-                    'punctuality' => round($r2 * 100, 1),
-                    'late_freq' => round($r3 * 100, 1),
-                    'alpha' => round($r4 * 100, 1),
-                    'consistency' => round($r5 * 100, 1),
+                    'attendance' => round($scoreC1, 1),
+                    'punctuality' => round($scoreC2, 1),
+                    'late_freq' => round($scoreC3, 1),
+                    'alpha' => round($scoreC4, 1),
+                    'consistency' => round($scoreC5, 1),
                 ],
                 'final_score' => round($finalScore, 2),
                 'category' => $category,
